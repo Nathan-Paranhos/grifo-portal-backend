@@ -1,0 +1,130 @@
+{
+  "schema": [
+    {
+      "test": "Required Tables Exist",
+      "status": "FAIL",
+      "message": "Erro ao verificar tabelas: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.934Z",
+      "details": {}
+    },
+    {
+      "test": "companies Columns",
+      "status": "WARN",
+      "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.938Z",
+      "details": {}
+    },
+    {
+      "test": "users Columns",
+      "status": "WARN",
+      "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.946Z",
+      "details": {}
+    },
+    {
+      "test": "imoveis Columns",
+      "status": "WARN",
+      "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.952Z",
+      "details": {}
+    },
+    {
+      "test": "vistorias Columns",
+      "status": "WARN",
+      "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.957Z",
+      "details": {}
+    }
+  ],
+  "rls": [
+    {
+      "test": "companies RLS Enabled",
+      "status": "WARN",
+      "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.965Z",
+      "details": {}
+    },
+    {
+      "test": "users RLS Enabled",
+      "status": "WARN",
+      "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.974Z",
+      "details": {}
+    },
+    {
+      "test": "imoveis RLS Enabled",
+      "status": "WARN",
+      "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.978Z",
+      "details": {}
+    },
+    {
+      "test": "vistorias RLS Enabled",
+      "status": "WARN",
+      "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:14.986Z",
+      "details": {}
+    },
+    {
+      "test": "Company Data Isolation",
+      "status": "FAIL",
+      "message": "Não foi possível criar usuários de teste",
+      "timestamp": "2025-08-13T19:53:15.003Z",
+      "details": {}
+    }
+  ],
+  "triggers": [
+    {
+      "test": "Essential Triggers Exist",
+      "status": "WARN",
+      "message": "Não foi possível verificar triggers",
+      "timestamp": "2025-08-13T19:53:15.009Z",
+      "details": {}
+    },
+    {
+      "test": "Updated At Trigger",
+      "status": "FAIL",
+      "message": "Erro na inserção: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:15.015Z",
+      "details": {}
+    }
+  ],
+  "integrity": [
+    {
+      "test": "NOT NULL Constraints",
+      "status": "WARN",
+      "message": "Erro inesperado: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:15.026Z",
+      "details": {}
+    },
+    {
+      "test": "UNIQUE Constraints",
+      "status": "WARN",
+      "message": "Erro inesperado: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:15.035Z",
+      "details": {}
+    }
+  ],
+  "performance": [
+    {
+      "test": "Simple Query Performance",
+      "status": "FAIL",
+      "message": "Erro na consulta: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:15.047Z",
+      "details": {}
+    },
+    {
+      "test": "JOIN Query Performance",
+      "status": "WARN",
+      "message": "Erro no JOIN: TypeError: fetch failed",
+      "timestamp": "2025-08-13T19:53:15.052Z",
+      "details": {}
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "passed": 0,
+    "failed": 4,
+    "warnings": 12
+  }
+}

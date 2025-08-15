@@ -1,0 +1,36 @@
+{
+  "name": "grifo-portal-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "check": "npm run lint && npm run build",
+    "export": "next export",
+    "analyze": "ANALYZE=true npm run build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.2.1",
+    "lucide-react": "^0.539.0",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

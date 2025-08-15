@@ -1,0 +1,40 @@
+{
+  "name": "grifo-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de backup, restore e manutenção do sistema Grifo Vistorias",
+  "main": "backup.js",
+  "scripts": {
+    "backup": "node backup.js",
+    "restore": "node restore.js",
+    "list-backups": "node -e \"require('./restore.js').listBackups()\"",
+    "install-deps": "npm install",
+    "setup": "npm run install-deps && echo 'Scripts setup complete!'"
+  },
+  "keywords": [
+    "backup",
+    "restore",
+    "grifo",
+    "vistorias",
+    "maintenance"
+  ],
+  "author": "Grifo Vistorias",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0"
+  },
+  "optionalDependencies": {
+    "archiver": "^7.0.1",
+    "adm-zip": "^0.5.14"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grifo-vistorias/sistema.git"
+  },
+  "bugs": {
+    "url": "https://github.com/grifo-vistorias/sistema/issues"
+  },
+  "homepage": "https://github.com/grifo-vistorias/sistema#readme"
+}

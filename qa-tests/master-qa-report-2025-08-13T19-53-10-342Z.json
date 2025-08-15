@@ -1,0 +1,511 @@
+{
+  "execution": {
+    "startTime": "2025-08-13T19:53:10.367Z",
+    "endTime": "2025-08-13T19:53:20.347Z",
+    "duration": 9980,
+    "timestamp": "2025-08-13T19-53-10-342Z"
+  },
+  "suites": {
+    "comprehensive": {
+      "status": "completed",
+      "results": {
+        "connectivity": [
+          {
+            "test": "API Health Check",
+            "status": "PASS",
+            "message": "API respondendo corretamente",
+            "timestamp": "2025-08-13T19:53:11.457Z",
+            "details": {
+              "responseTime": "N/A",
+              "status": 200
+            }
+          },
+          {
+            "test": "Supabase Connection",
+            "status": "FAIL",
+            "message": "Erro Supabase: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:11.646Z",
+            "details": {}
+          },
+          {
+            "test": "Portal Web Access",
+            "status": "PASS",
+            "message": "Portal web acessível",
+            "timestamp": "2025-08-13T19:53:12.527Z",
+            "details": {}
+          }
+        ],
+        "authentication": [
+          {
+            "test": "User Registration",
+            "status": "FAIL",
+            "message": "Erro no registro: fetch failed",
+            "timestamp": "2025-08-13T19:53:12.545Z",
+            "details": {}
+          },
+          {
+            "test": "User Login",
+            "status": "FAIL",
+            "message": "Erro no login: fetch failed",
+            "timestamp": "2025-08-13T19:53:12.553Z",
+            "details": {}
+          }
+        ],
+        "rls": [
+          {
+            "test": "Company Data Isolation Setup",
+            "status": "FAIL",
+            "message": "Erro ao criar empresas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:12.564Z",
+            "details": {}
+          }
+        ],
+        "performance": [
+          {
+            "test": "API Response Time",
+            "status": "PASS",
+            "message": "Tempo de resposta: 461ms",
+            "timestamp": "2025-08-13T19:53:13.026Z",
+            "details": {
+              "responseTime": "461ms",
+              "threshold": "2000ms"
+            }
+          },
+          {
+            "test": "Concurrent Requests",
+            "status": "PASS",
+            "message": "10/10 requisições bem-sucedidas em 1046ms",
+            "timestamp": "2025-08-13T19:53:14.105Z",
+            "details": {}
+          }
+        ],
+        "security": [
+          {
+            "test": "Unauthorized Access Protection",
+            "status": "FAIL",
+            "message": "API permite acesso não autorizado (Status: 404)",
+            "timestamp": "2025-08-13T19:53:14.354Z",
+            "details": {}
+          },
+          {
+            "test": "SQL Injection Protection",
+            "status": "WARN",
+            "message": "Possível vulnerabilidade de injeção SQL",
+            "timestamp": "2025-08-13T19:53:14.646Z",
+            "details": {}
+          },
+          {
+            "test": "Security Headers",
+            "status": "FAIL",
+            "message": "Headers de segurança ausentes",
+            "timestamp": "2025-08-13T19:53:14.904Z",
+            "details": {}
+          }
+        ],
+        "summary": {
+          "total": 11,
+          "passed": 4,
+          "failed": 6,
+          "warnings": 1
+        }
+      },
+      "error": null
+    },
+    "database": {
+      "status": "completed",
+      "results": {
+        "schema": [
+          {
+            "test": "Required Tables Exist",
+            "status": "FAIL",
+            "message": "Erro ao verificar tabelas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.934Z",
+            "details": {}
+          },
+          {
+            "test": "companies Columns",
+            "status": "WARN",
+            "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.938Z",
+            "details": {}
+          },
+          {
+            "test": "users Columns",
+            "status": "WARN",
+            "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.946Z",
+            "details": {}
+          },
+          {
+            "test": "imoveis Columns",
+            "status": "WARN",
+            "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.952Z",
+            "details": {}
+          },
+          {
+            "test": "vistorias Columns",
+            "status": "WARN",
+            "message": "Não foi possível verificar colunas: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.957Z",
+            "details": {}
+          }
+        ],
+        "rls": [
+          {
+            "test": "companies RLS Enabled",
+            "status": "WARN",
+            "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.965Z",
+            "details": {}
+          },
+          {
+            "test": "users RLS Enabled",
+            "status": "WARN",
+            "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.974Z",
+            "details": {}
+          },
+          {
+            "test": "imoveis RLS Enabled",
+            "status": "WARN",
+            "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.978Z",
+            "details": {}
+          },
+          {
+            "test": "vistorias RLS Enabled",
+            "status": "WARN",
+            "message": "Não foi possível verificar RLS: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:14.986Z",
+            "details": {}
+          },
+          {
+            "test": "Company Data Isolation",
+            "status": "FAIL",
+            "message": "Não foi possível criar usuários de teste",
+            "timestamp": "2025-08-13T19:53:15.003Z",
+            "details": {}
+          }
+        ],
+        "triggers": [
+          {
+            "test": "Essential Triggers Exist",
+            "status": "WARN",
+            "message": "Não foi possível verificar triggers",
+            "timestamp": "2025-08-13T19:53:15.009Z",
+            "details": {}
+          },
+          {
+            "test": "Updated At Trigger",
+            "status": "FAIL",
+            "message": "Erro na inserção: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:15.015Z",
+            "details": {}
+          }
+        ],
+        "integrity": [
+          {
+            "test": "NOT NULL Constraints",
+            "status": "WARN",
+            "message": "Erro inesperado: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:15.026Z",
+            "details": {}
+          },
+          {
+            "test": "UNIQUE Constraints",
+            "status": "WARN",
+            "message": "Erro inesperado: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:15.035Z",
+            "details": {}
+          }
+        ],
+        "performance": [
+          {
+            "test": "Simple Query Performance",
+            "status": "FAIL",
+            "message": "Erro na consulta: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:15.047Z",
+            "details": {}
+          },
+          {
+            "test": "JOIN Query Performance",
+            "status": "WARN",
+            "message": "Erro no JOIN: TypeError: fetch failed",
+            "timestamp": "2025-08-13T19:53:15.052Z",
+            "details": {}
+          }
+        ],
+        "summary": {
+          "total": 16,
+          "passed": 0,
+          "failed": 4,
+          "warnings": 12
+        }
+      },
+      "error": null
+    },
+    "security": {
+      "status": "completed",
+      "results": {
+        "authentication": [
+          {
+            "test": "Brute Force Protection",
+            "status": "WARN",
+            "message": "Sem proteção aparente contra força bruta",
+            "severity": "high",
+            "timestamp": "2025-08-13T19:53:15.128Z",
+            "details": {}
+          },
+          {
+            "test": "JWT Token Validation",
+            "status": "FAIL",
+            "message": "API aceita tokens JWT inválidos",
+            "severity": "critical",
+            "timestamp": "2025-08-13T19:53:15.396Z",
+            "details": {}
+          }
+        ],
+        "authorization": [],
+        "injection": [
+          {
+            "test": "SQL Injection Test ('; DROP TABLE compan...)",
+            "status": "PASS",
+            "message": "Payload SQL rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:15.724Z",
+            "details": {}
+          },
+          {
+            "test": "SQL Injection Test (' OR '1'='1...)",
+            "status": "PASS",
+            "message": "Payload SQL rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:15.965Z",
+            "details": {}
+          },
+          {
+            "test": "SQL Injection Test ('; INSERT INTO compa...)",
+            "status": "PASS",
+            "message": "Payload SQL rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:16.380Z",
+            "details": {}
+          },
+          {
+            "test": "SQL Injection Test (' UNION SELECT * FRO...)",
+            "status": "PASS",
+            "message": "Payload SQL rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:16.654Z",
+            "details": {}
+          },
+          {
+            "test": "NoSQL Injection Protection",
+            "status": "PASS",
+            "message": "Supabase protegido contra NoSQL injection",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:16.657Z",
+            "details": {}
+          }
+        ],
+        "xss": [
+          {
+            "test": "XSS Test (<script>alert(\"XSS\")...)",
+            "status": "PASS",
+            "message": "Payload XSS rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:16.907Z",
+            "details": {}
+          },
+          {
+            "test": "XSS Test (<img src=x onerror=a...)",
+            "status": "PASS",
+            "message": "Payload XSS rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:17.162Z",
+            "details": {}
+          },
+          {
+            "test": "XSS Test (javascript:alert(\"XS...)",
+            "status": "PASS",
+            "message": "Payload XSS rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:17.404Z",
+            "details": {}
+          },
+          {
+            "test": "XSS Test (<svg onload=alert(\"X...)",
+            "status": "PASS",
+            "message": "Payload XSS rejeitado",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:17.657Z",
+            "details": {}
+          }
+        ],
+        "csrf": [],
+        "headers": [
+          {
+            "test": "x-content-type-options Header",
+            "status": "FAIL",
+            "message": "Header de segurança ausente",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.070Z",
+            "details": {}
+          },
+          {
+            "test": "x-frame-options Header",
+            "status": "FAIL",
+            "message": "Header de segurança ausente",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.070Z",
+            "details": {}
+          },
+          {
+            "test": "x-xss-protection Header",
+            "status": "FAIL",
+            "message": "Header de segurança ausente",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.070Z",
+            "details": {}
+          },
+          {
+            "test": "strict-transport-security Header",
+            "status": "FAIL",
+            "message": "Header de segurança ausente",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.070Z",
+            "details": {}
+          },
+          {
+            "test": "content-security-policy Header",
+            "status": "FAIL",
+            "message": "Header de segurança ausente",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.070Z",
+            "details": {}
+          }
+        ],
+        "encryption": [
+          {
+            "test": "HTTPS Enforcement",
+            "status": "PASS",
+            "message": "HTTP redirecionado para HTTPS",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.472Z",
+            "details": {}
+          },
+          {
+            "test": "Weak Password Rejection (123456)",
+            "status": "WARN",
+            "message": "Erro inesperado: fetch failed",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.477Z",
+            "details": {}
+          },
+          {
+            "test": "Weak Password Rejection (password)",
+            "status": "WARN",
+            "message": "Erro inesperado: fetch failed",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.481Z",
+            "details": {}
+          },
+          {
+            "test": "Weak Password Rejection (admin)",
+            "status": "WARN",
+            "message": "Erro inesperado: fetch failed",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.487Z",
+            "details": {}
+          },
+          {
+            "test": "Weak Password Rejection (12345678)",
+            "status": "WARN",
+            "message": "Erro inesperado: fetch failed",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:18.492Z",
+            "details": {}
+          }
+        ],
+        "rateLimit": [
+          {
+            "test": "Rate Limiting Protection",
+            "status": "PASS",
+            "message": "Possível rate limiting por tempo de resposta",
+            "severity": "medium",
+            "timestamp": "2025-08-13T19:53:20.331Z",
+            "details": {}
+          }
+        ],
+        "summary": {
+          "total": 22,
+          "passed": 11,
+          "failed": 6,
+          "warnings": 5,
+          "critical": 1
+        }
+      },
+      "error": null
+    }
+  },
+  "summary": {
+    "totalTests": 49,
+    "totalPassed": 15,
+    "totalFailed": 16,
+    "totalWarnings": 18,
+    "totalCritical": 1,
+    "overallStatus": "critical",
+    "readyForProduction": false
+  },
+  "recommendations": [
+    {
+      "priority": "high",
+      "category": "comprehensive",
+      "message": "6 testes falharam em comprehensive",
+      "action": "Revisar e corrigir falhas antes do deploy"
+    },
+    {
+      "priority": "medium",
+      "category": "comprehensive",
+      "message": "1 avisos em comprehensive",
+      "action": "Revisar avisos para otimizar segurança e performance"
+    },
+    {
+      "priority": "high",
+      "category": "database",
+      "message": "4 testes falharam em database",
+      "action": "Revisar e corrigir falhas antes do deploy"
+    },
+    {
+      "priority": "medium",
+      "category": "database",
+      "message": "12 avisos em database",
+      "action": "Revisar avisos para otimizar segurança e performance"
+    },
+    {
+      "priority": "critical",
+      "category": "security",
+      "message": "1 problemas críticos encontrados em security",
+      "action": "BLOQUEADOR: Corrigir antes do deploy em produção"
+    },
+    {
+      "priority": "high",
+      "category": "security",
+      "message": "6 testes falharam em security",
+      "action": "Revisar e corrigir falhas antes do deploy"
+    },
+    {
+      "priority": "medium",
+      "category": "security",
+      "message": "5 avisos em security",
+      "action": "Revisar avisos para otimizar segurança e performance"
+    },
+    {
+      "priority": "critical",
+      "category": "production",
+      "message": "Sistema NÃO aprovado para produção",
+      "action": "Corrigir todos os problemas críticos antes do deploy"
+    }
+  ]
+}

@@ -1,0 +1,546 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useLocalSearchParams } from 'expo-router';
+import { SupabaseService } from '@/services/supabase';
+import { OfflineService } from '@/services/offline';
+import { PdfService } from '@/services/pdf';
+import { SyncService } from '@/services/sync';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { colors, typography, spacing } from '@/constants/colors';
+import { DraftVistoria, DraftAmbiente, Imovel } from '@/types';
+import { ArrowLeft, Chrome as Home, Camera, FileText, CircleCheck as CheckCircle } from 'lucide-react-native';
+
+const WIZARD_STEPS = [
+  { id: 'info', title: 'Informações Gerais', icon: Home },
+  { id: 'ambientes', title: 'Ambientes', icon: Camera },
+  { id: 'revisao', title: 'Revisão', icon: FileText },
+  { id: 'finalizar', title: 'Finalizar', icon: CheckCircle },
+];
+
+const AMBIENTES_PREDEFINIDOS = [
+  'Sala de Estar', 'Cozinha', 'Quarto 1', 'Quarto 2', 'Quarto 3',
+  'Banheiro 1', 'Banheiro 2', 'Área de Serviço', 'Varanda', 'Garagem'
+];
+
+export default function WizardScreen() {
+  useLocalSearchParams();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [imoveis, setImoveis] = useState<Imovel[]>([]);
+  
+  // Draft data
+  const [draftVistoria, setDraftVistoria] = useState<DraftVistoria>({
+    id: `draft_${Date.now()}`,
+    empresa_id: '', // Will be set from authenticated user
+    imovel_id: '',
+    tipo: 'entrada',
+    ambientes: [],
+    synced: false,
+    created_at: new Date().toISOString(),
+  });
+
+  const [selectedAmbiente, setSelectedAmbiente] = useState<string>('');
+  const [comentarioAmbiente, setComentarioAmbiente] = useState<string>('');
+
+  useEffect(() => {
+    loadImoveis();
+  }, []);
+
+  const loadImoveis = async () => {
+    try {
+      // Verificar se há usuário autenticado
+      const currentUser = await SupabaseService.getCurrentUser();
+      
+      if (!currentUser) {
+        // No authenticated user found
+        setImoveis([]);
+        return;
+      }
+      
+      // Usar empresa_id do usuário autenticado
+      const empresaId = currentUser.user_metadata?.empresa_id;
+      
+      if (!empresaId) {
+        // User has no empresa_id
+        setImoveis([]);
+        return;
+      }
+      
+      // Atualizar empresa_id no draft
+      setDraftVistoria(prev => ({ ...prev, empresa_id: empresaId }));
+      
+      const data = await SupabaseService.getImoveis(empresaId);
+      setImoveis(Array.isArray(data) ? data : []);
+    } catch (error) {
+        // Error loading imoveis handled silently
+        setImoveis([]);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      router.back();
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentStep < WIZARD_STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      await handleFinalize();
+    }
+  };
+
+  const handleFinalize = async () => {
+    setLoading(true);
+    try {
+      // Save draft locally
+      await OfflineService.saveDraftVistoria(draftVistoria);
+      
+      // Generate PDF
+      const selectedImovel = imoveis.find(i => i.id === draftVistoria.imovel_id);
+      if (selectedImovel) {
+        const pdfPath = await PdfService.generatePdf(draftVistoria, selectedImovel);
+        
+        // Queue PDF for upload
+        await SyncService.queuePdfUpload(
+          draftVistoria.id,
+          pdfPath,
+          `vistoria_${draftVistoria.id}.pdf`
+        );
+      }
+
+      // Create vistoria record in Supabase
+      await SupabaseService.createVistoria({
+        empresa_id: draftVistoria.empresa_id,
+        imovel_id: draftVistoria.imovel_id,
+        vistoriador_id: 'user_id', // Would come from user context
+        tipo: draftVistoria.tipo,
+        status: 'rascunho',
+      });
+
+      Alert.alert('Sucesso', 'Vistoria criada com sucesso!', [
+        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+      ]);
+    } catch (error) {
+        // Error finalizing vistoria handled silently
+        Alert.alert('Erro', 'Não foi possível finalizar a vistoria');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addAmbiente = () => {
+    if (!selectedAmbiente) return;
+
+    const novoAmbiente: DraftAmbiente = {
+      id: `ambiente_${Date.now()}`,
+      nome: selectedAmbiente,
+      comentario: comentarioAmbiente,
+      fotos: [],
+      ordem: draftVistoria.ambientes.length,
+    };
+
+    setDraftVistoria(prev => ({
+      ...prev,
+      ambientes: [...prev.ambientes, novoAmbiente],
+    }));
+
+    setSelectedAmbiente('');
+    setComentarioAmbiente('');
+  };
+
+  const renderStepIndicator = () => (
+    <View style={styles.stepIndicator}>
+      {WIZARD_STEPS.map((step, index) => {
+        const isActive = index === currentStep;
+        const isCompleted = index < currentStep;
+        const IconComponent = step.icon;
+
+        return (
+          <View key={step.id} style={styles.stepItem}>
+            <View style={[
+              styles.stepCircle,
+              isActive && styles.stepActive,
+              isCompleted && styles.stepCompleted,
+            ]}>
+              <IconComponent 
+                size={16} 
+                color={isActive || isCompleted ? colors.background : colors.textMuted} 
+              />
+            </View>
+            <Text style={[
+              styles.stepText,
+              isActive && styles.stepTextActive,
+            ]}>
+              {step.title}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0: // Informações Gerais
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Informações da Vistoria</Text>
+            
+            <Input
+              label="Tipo de Vistoria"
+              value={draftVistoria.tipo}
+              editable={false}
+              style={styles.readOnlyInput}
+            />
+
+            <Text style={styles.selectLabel}>Selecionar Imóvel</Text>
+            <ScrollView style={styles.imovelList}>
+              {imoveis.map((imovel) => (
+                <TouchableOpacity
+                  key={imovel.id}
+                  style={[
+                    styles.imovelItem,
+                    draftVistoria.imovel_id === imovel.id && styles.imovelSelected,
+                  ]}
+                  onPress={() => setDraftVistoria(prev => ({ ...prev, imovel_id: imovel.id }))}
+                >
+                  <Text style={styles.imovelCode}>{imovel.codigo}</Text>
+                  <Text style={styles.imovelAddress}>{imovel.endereco}</Text>
+                  <Text style={styles.imovelType}>{imovel.tipo}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        );
+
+      case 1: // Ambientes
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Adicionar Ambientes</Text>
+            
+            <Text style={styles.selectLabel}>Selecionar Ambiente</Text>
+            <ScrollView style={styles.ambienteList}>
+              {AMBIENTES_PREDEFINIDOS.map((ambiente) => (
+                <TouchableOpacity
+                  key={ambiente}
+                  style={[
+                    styles.ambienteItem,
+                    selectedAmbiente === ambiente && styles.ambienteSelected,
+                  ]}
+                  onPress={() => setSelectedAmbiente(ambiente)}
+                >
+                  <Text style={styles.ambienteText}>{ambiente}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Input
+              label="Comentário do Ambiente"
+              value={comentarioAmbiente}
+              onChangeText={setComentarioAmbiente}
+              multiline
+              placeholder="Adicione observações sobre o ambiente..."
+            />
+
+            <Button
+              title="Adicionar Ambiente"
+              onPress={addAmbiente}
+              disabled={!selectedAmbiente}
+              style={styles.addButton}
+            />
+
+            {/* Lista de ambientes adicionados */}
+            {draftVistoria.ambientes.length > 0 && (
+              <View style={styles.ambientesAdicionados}>
+                <Text style={styles.selectLabel}>Ambientes Adicionados ({draftVistoria.ambientes.length})</Text>
+                {draftVistoria.ambientes.map((ambiente) => (
+                  <Card key={ambiente.id} style={styles.ambienteCard}>
+                    <Text style={styles.ambienteNome}>{ambiente.nome}</Text>
+                    <Text style={styles.ambienteComentario}>{ambiente.comentario}</Text>
+                  </Card>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+
+      case 2: // Revisão
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Revisão da Vistoria</Text>
+            
+            <Card style={styles.resumoCard}>
+              <Text style={styles.resumoTitle}>Resumo</Text>
+              <Text style={styles.resumoItem}>Tipo: {draftVistoria.tipo}</Text>
+              <Text style={styles.resumoItem}>Ambientes: {draftVistoria.ambientes.length}</Text>
+              <Text style={styles.resumoItem}>
+                Imóvel: {imoveis.find(i => i.id === draftVistoria.imovel_id)?.codigo}
+              </Text>
+            </Card>
+          </View>
+        );
+
+      case 3: // Finalizar
+        return (
+          <View style={styles.stepContent}>
+            <Text style={styles.stepTitle}>Finalizar Vistoria</Text>
+            
+            <View style={styles.finalizeContent}>
+              <CheckCircle size={64} color={colors.success} />
+              <Text style={styles.finalizeTitle}>Vistoria Pronta!</Text>
+              <Text style={styles.finalizeText}>
+                A vistoria será salva e sincronizada automaticamente quando possível.
+              </Text>
+            </View>
+          </View>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 0: return draftVistoria.imovel_id !== '';
+      case 1: return draftVistoria.ambientes.length > 0;
+      case 2: return true;
+      case 3: return true;
+      default: return false;
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <ArrowLeft size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Nova Vistoria</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {renderStepIndicator()}
+
+      <ScrollView style={styles.content}>
+        {renderStepContent()}
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <Button
+          title={currentStep === WIZARD_STEPS.length - 1 ? "Finalizar" : "Próximo"}
+          onPress={handleNext}
+          disabled={!isStepValid()}
+          loading={loading}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backButton: {
+    padding: spacing.sm,
+  },
+  headerTitle: {
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+  },
+  placeholder: {
+    width: 40,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  stepItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  stepActive: {
+    backgroundColor: colors.primary,
+  },
+  stepCompleted: {
+    backgroundColor: colors.success,
+  },
+  stepText: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  stepTextActive: {
+    color: colors.primary,
+  },
+  content: {
+    flex: 1,
+  },
+  stepContent: {
+    padding: spacing.lg,
+  },
+  stepTitle: {
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+  },
+  readOnlyInput: {
+    backgroundColor: colors.surfaceVariant,
+    color: colors.textMuted,
+  },
+  selectLabel: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  imovelList: {
+    maxHeight: 200,
+    marginBottom: spacing.lg,
+  },
+  imovelItem: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  imovelSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '10',
+  },
+  imovelCode: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  imovelAddress: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  imovelType: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textMuted,
+  },
+  ambienteList: {
+    maxHeight: 150,
+    marginBottom: spacing.lg,
+  },
+  ambienteItem: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ambienteSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary + '10',
+  },
+  ambienteText: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textPrimary,
+  },
+  addButton: {
+    marginBottom: spacing.lg,
+  },
+  ambientesAdicionados: {
+    marginTop: spacing.lg,
+  },
+  ambienteCard: {
+    marginBottom: spacing.sm,
+  },
+  ambienteNome: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  ambienteComentario: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+  },
+  resumoCard: {
+    padding: spacing.lg,
+  },
+  resumoTitle: {
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+  },
+  resumoItem: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  finalizeContent: {
+    alignItems: 'center',
+    padding: spacing.xxl,
+  },
+  finalizeTitle: {
+    fontSize: typography.size.xl,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  finalizeText: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  footer: {
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+});
