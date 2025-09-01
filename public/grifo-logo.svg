@@ -1,0 +1,31 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="60" cy="60" r="58" fill="#1a1a1a" stroke="#d4af37" stroke-width="4"/>
+  
+  <!-- Griffin Body -->
+  <path d="M30 75 Q35 65 45 70 Q55 75 65 70 Q75 65 85 70 Q90 75 85 85 Q75 90 65 85 Q55 90 45 85 Q35 90 30 85 Z" fill="#d4af37"/>
+  
+  <!-- Griffin Head -->
+  <ellipse cx="60" cy="45" rx="18" ry="15" fill="#d4af37"/>
+  
+  <!-- Griffin Beak -->
+  <path d="M42 45 L35 48 L42 51 Z" fill="#b8941f"/>
+  
+  <!-- Griffin Eye -->
+  <circle cx="52" cy="42" r="3" fill="#1a1a1a"/>
+  <circle cx="53" cy="41" r="1" fill="#ffffff"/>
+  
+  <!-- Griffin Wings -->
+  <path d="M25 55 Q20 45 30 40 Q40 45 35 55 Q30 60 25 55 Z" fill="#d4af37" opacity="0.8"/>
+  <path d="M85 55 Q95 45 85 40 Q75 45 80 55 Q85 60 90 55 Z" fill="#d4af37" opacity="0.8"/>
+  
+  <!-- Griffin Tail -->
+  <path d="M85 80 Q95 85 90 95 Q85 90 80 85" fill="#d4af37" opacity="0.7"/>
+  
+  <!-- Griffin Claws -->
+  <path d="M40 85 L38 92 M45 85 L43 92 M50 85 L48 92" stroke="#b8941f" stroke-width="2" stroke-linecap="round"/>
+  <path d="M70 85 L72 92 M75 85 L77 92 M80 85 L82 92" stroke="#b8941f" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Text GRIFO -->
+  <text x="60" y="110" font-family="Arial, sans-serif" font-size="12" font-weight="bold" text-anchor="middle" fill="#d4af37">GRIFO</text>
+</svg>
