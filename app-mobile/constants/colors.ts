@@ -15,7 +15,7 @@ export const colors = {
   primary: '#F59E0B',
   primaryLight: '#FCD34D',
   primaryDark: '#D97706',
-  primaryGradient: ['#F59E0B', '#FCD34D'],
+  primaryGradient: ['#F59E0B', '#FCD34D', '#F59E0B'] as const,
   
   // Professional Status Colors
   success: '#059669',
@@ -26,6 +26,7 @@ export const colors = {
   dangerLight: '#DC2626',
   info: '#1D4ED8',
   infoLight: '#3B82F6',
+  error: '#DC2626',
   
   // Professional Accent Colors
   accent: '#F59E0B',
@@ -45,15 +46,17 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.75)',
   backdropBlur: 'rgba(10, 10, 11, 0.85)',
   card: 'rgba(26, 26, 28, 0.95)',
+  glass: 'rgba(26, 26, 28, 0.8)',
+  text: '#FFFFFF',
   
   // Professional Gradient Combinations
   gradients: {
-    primary: ['#F59E0B', '#FCD34D'],
-    success: ['#059669', '#10B981'],
-    warning: ['#DC2626', '#EF4444'],
-    danger: ['#B91C1C', '#DC2626'],
-    surface: ['#1A1A1C', '#242428'],
-    accent: ['#6366F1', '#818CF8'],
+    primary: ['#F59E0B', '#FCD34D', '#F59E0B'] as const,
+    success: ['#059669', '#10B981', '#059669'] as const,
+    warning: ['#DC2626', '#EF4444', '#DC2626'] as const,
+    danger: ['#B91C1C', '#DC2626', '#B91C1C'] as const,
+    surface: ['#1A1A1C', '#242428', '#1A1A1C'] as const,
+    accent: ['#6366F1', '#818CF8', '#6366F1'] as const,
   },
 };
 
@@ -64,6 +67,14 @@ export const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  borderRadius: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 24,
+  },
 };
 
 export const borderRadius = {
@@ -89,5 +100,10 @@ export const typography = {
     xxl: 24,
     xxxl: 28,
     huge: 32,
+    caption: 12,
+  },
+  h3: {
+    fontSize: 20,
+    fontWeight: '600',
   },
 };

@@ -80,15 +80,15 @@ export const ModernProgressBar: React.FC<ModernProgressBarProps> = ({
   const getColors = () => {
     switch (variant) {
       case 'gradient':
-        return [colors.accent, colors.primary];
+        return [colors.secondary, colors.primary] as const;
       case 'success':
-        return [colors.success, colors.success];
+        return [colors.primary, colors.primary] as const;
       case 'warning':
-        return [colors.warning, colors.warning];
+        return [colors.warning, colors.warning] as const;
       case 'error':
-        return [colors.error, colors.error];
+        return [colors.danger, colors.danger] as const;
       default:
-        return [colors.primary, colors.primary];
+        return [colors.primary, colors.primary] as const;
     }
   };
 
@@ -186,13 +186,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    fontSize: typography.caption.fontSize,
-    fontFamily: typography.caption.fontFamily,
+    fontSize: typography.size.caption,
+    fontFamily: typography.fontFamily.regular,
     color: colors.textSecondary,
   },
   percentage: {
-    fontSize: typography.caption.fontSize,
-    fontFamily: typography.caption.fontFamily,
+    fontSize: typography.size.caption,
+    fontFamily: typography.fontFamily.medium,
     color: colors.textPrimary,
     fontWeight: '600',
   },

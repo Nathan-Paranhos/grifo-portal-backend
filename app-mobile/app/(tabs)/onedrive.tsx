@@ -15,8 +15,8 @@ import {
   CloudOff,
   Download,
   Upload,
-  Sync,
-  CheckCircle,
+  RefreshCw as Sync,
+  CircleCheck as CheckCircle,
   Settings,
   FileText,
   Image as ImageIcon,
@@ -284,8 +284,8 @@ export default function OneDriveScreen() {
                   title="Sincronizar"
                   onPress={handleSync}
                   variant="primary"
-                  size="medium"
-                  icon={Sync}
+                  size="md"
+                  icon={<Sync size={16} color="white" />}
                   loading={connection.syncStatus === 'syncing'}
                   style={styles.actionButton}
                 />
@@ -293,7 +293,7 @@ export default function OneDriveScreen() {
                   title="Desconectar"
                   onPress={handleDisconnect}
                   variant="outline"
-                  size="medium"
+                  size="md"
                   style={styles.actionButton}
                 />
               </View>
@@ -302,10 +302,9 @@ export default function OneDriveScreen() {
                 title="Conectar ao OneDrive"
                 onPress={handleConnect}
                 variant="primary"
-                size="large"
-                icon={Cloud}
+                size="lg"
+                icon={<Cloud size={20} color="white" />}
                 loading={connection.syncStatus === 'syncing'}
-                fullWidth
               />
             )}
           </ModernCard>

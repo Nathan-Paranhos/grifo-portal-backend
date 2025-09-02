@@ -9,27 +9,35 @@
     "lint": "next lint",
     "check": "npm run lint && npm run build",
     "export": "next export",
-    "analyze": "ANALYZE=true npm run build"
+    "analyze": "ANALYZE=true npm run build",
+    "test:portal": "node test-portal-complete.js",
+    "test:install": "npm install puppeteer --save-dev"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.55.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.1",
     "lucide-react": "^0.539.0",
-    "next": "14.2.5",
+    "next": "^14.2.32",
     "react": "^18",
     "react-dom": "^18",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
+    "puppeteer": "^24.17.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

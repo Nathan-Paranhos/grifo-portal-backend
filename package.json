@@ -1,0 +1,26 @@
+{
+  "name": "grifo-vistorias",
+  "version": "1.0.0",
+  "description": "Sistema Grifo - Gestão de Vistorias Imobiliárias",
+  "scripts": {
+    "dev:api": "cd api && npm run dev",
+    "dev:portal": "cd portal-web && npm run dev",
+    "dev:mobile": "cd app-mobile && npm start",
+    "install:all": "npm install && cd api && npm install && cd ../portal-web && npm install && cd ../app-mobile && npm install",
+    "build:api": "cd api && npm run build",
+    "build:portal": "cd portal-web && npm run build",
+    "build:mobile": "cd app-mobile && npm run build"
+  },
+  "keywords": [
+    "grifo",
+    "vistorias",
+    "imobiliarias",
+    "sistema",
+    "gestao"
+  ],
+  "author": "Nathan Paranhos",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2"
+  }
+}

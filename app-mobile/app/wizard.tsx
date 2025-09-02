@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { colors, typography, spacing } from '@/constants/colors';
 import { DraftVistoria, DraftAmbiente, Imovel } from '@/types';
-import { ArrowLeft, Chrome as Home, Camera, FileText, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, Chrome as Home, Camera, FileText, CircleCheck as CheckCircle, CameraIcon } from 'lucide-react-native';
 
 const WIZARD_STEPS = [
   { id: 'info', title: 'Informações Gerais', icon: Home },
@@ -44,6 +44,8 @@ export default function WizardScreen() {
 
   const [selectedAmbiente, setSelectedAmbiente] = useState<string>('');
   const [comentarioAmbiente, setComentarioAmbiente] = useState<string>('');
+  const [observacoesGerais, setObservacoesGerais] = useState<string>('');
+  const [finalizando, setFinalizando] = useState<boolean>(false);
 
   useEffect(() => {
     loadImoveis();
@@ -99,37 +101,54 @@ export default function WizardScreen() {
   const handleFinalize = async () => {
     setLoading(true);
     try {
+      // Atualizar draft com observações gerais
+      const vistoriaFinalizada = {
+        ...draftVistoria,
+        observacoes: observacoesGerais,
+        status: 'synced' as const,
+        finalized_at: new Date().toISOString(),
+      };
+      
       // Save draft locally
-      await OfflineService.saveDraftVistoria(draftVistoria);
+      await OfflineService.saveDraftVistoria(vistoriaFinalizada);
       
       // Generate PDF
       const selectedImovel = imoveis.find(i => i.id === draftVistoria.imovel_id);
       if (selectedImovel) {
-        const pdfPath = await PdfService.generatePdf(draftVistoria, selectedImovel);
+        const pdfPath = await PdfService.generatePdf(vistoriaFinalizada, selectedImovel);
         
         // Queue PDF for upload
         await SyncService.queuePdfUpload(
-          draftVistoria.id,
+          vistoriaFinalizada.id,
           pdfPath,
-          `vistoria_${draftVistoria.id}.pdf`
+          `vistoria_${vistoriaFinalizada.id}.pdf`
         );
       }
 
+      // Get current user for vistoriador_id
+      const currentUser = await SupabaseService.getCurrentUser();
+      const vistoriadorId = currentUser?.id || 'unknown';
+
       // Create vistoria record in Supabase
       await SupabaseService.createVistoria({
-        empresa_id: draftVistoria.empresa_id,
-        imovel_id: draftVistoria.imovel_id,
-        vistoriador_id: 'user_id', // Would come from user context
-        tipo: draftVistoria.tipo,
-        status: 'rascunho',
+        empresa_id: vistoriaFinalizada.empresa_id,
+        imovel_id: vistoriaFinalizada.imovel_id,
+        vistoriador_id: vistoriadorId,
+        tipo: vistoriaFinalizada.tipo,
+        status: 'finalizada',
+        observacoes: observacoesGerais,
       });
 
-      Alert.alert('Sucesso', 'Vistoria criada com sucesso!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') }
-      ]);
+      // Atualizar o estado local
+      setDraftVistoria(vistoriaFinalizada);
+      setFinalizando(true);
+      
+      // Não mostrar alert, apenas continuar o fluxo
+      // O usuário verá a tela de sucesso
     } catch (error) {
         // Error finalizing vistoria handled silently
         Alert.alert('Erro', 'Não foi possível finalizar a vistoria');
+        setFinalizando(false); // Voltar ao estado anterior
     } finally {
       setLoading(false);
     }
@@ -262,8 +281,28 @@ export default function WizardScreen() {
                 <Text style={styles.selectLabel}>Ambientes Adicionados ({draftVistoria.ambientes.length})</Text>
                 {draftVistoria.ambientes.map((ambiente) => (
                   <Card key={ambiente.id} style={styles.ambienteCard}>
-                    <Text style={styles.ambienteNome}>{ambiente.nome}</Text>
-                    <Text style={styles.ambienteComentario}>{ambiente.comentario}</Text>
+                    <View style={styles.ambienteHeader}>
+                      <View style={styles.ambienteInfo}>
+                        <Text style={styles.ambienteNome}>{ambiente.nome}</Text>
+                        <Text style={styles.ambienteComentario}>{ambiente.comentario}</Text>
+                        <Text style={styles.ambienteFotos}>
+                          {ambiente.fotos?.length || 0} foto(s)
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.cameraButton}
+                        onPress={() => router.push({
+                          pathname: '/vistoria/batch-camera',
+                          params: {
+                            vistoriaId: draftVistoria.id,
+                            ambiente: ambiente.nome
+                          }
+                        })}
+                      >
+                        <Camera size={20} color={colors.primary} />
+                        <Text style={styles.cameraButtonText}>Fotografar</Text>
+                      </TouchableOpacity>
+                    </View>
                   </Card>
                 ))}
               </View>
@@ -283,7 +322,35 @@ export default function WizardScreen() {
               <Text style={styles.resumoItem}>
                 Imóvel: {imoveis.find(i => i.id === draftVistoria.imovel_id)?.codigo}
               </Text>
+              
+              {/* Lista detalhada dos ambientes */}
+              <Text style={styles.resumoSubtitle}>Ambientes:</Text>
+              {draftVistoria.ambientes.map((ambiente, index) => (
+                <View key={ambiente.id} style={styles.resumoAmbiente}>
+                  <Text style={styles.resumoAmbienteNome}>
+                    {index + 1}. {ambiente.nome}
+                  </Text>
+                  <Text style={styles.resumoAmbienteInfo}>
+                    {ambiente.fotos?.length || 0} foto(s)
+                  </Text>
+                  {ambiente.comentario && (
+                    <Text style={styles.resumoAmbienteComentario}>
+                      "{ambiente.comentario}"
+                    </Text>
+                  )}
+                </View>
+              ))}
             </Card>
+            
+            <Input
+              label="Observações Gerais da Vistoria"
+              value={observacoesGerais}
+              onChangeText={setObservacoesGerais}
+              multiline
+              numberOfLines={4}
+              placeholder="Adicione observações gerais sobre a vistoria..."
+              style={styles.observacoesInput}
+            />
           </View>
         );
 
@@ -292,13 +359,71 @@ export default function WizardScreen() {
           <View style={styles.stepContent}>
             <Text style={styles.stepTitle}>Finalizar Vistoria</Text>
             
-            <View style={styles.finalizeContent}>
-              <CheckCircle size={64} color={colors.success} />
-              <Text style={styles.finalizeTitle}>Vistoria Pronta!</Text>
-              <Text style={styles.finalizeText}>
-                A vistoria será salva e sincronizada automaticamente quando possível.
-              </Text>
-            </View>
+            {!finalizando ? (
+              <View style={styles.finalizePreview}>
+                <Card style={styles.finalizeCard}>
+                  <Text style={styles.finalizeCardTitle}>Confirmar Finalização</Text>
+                  <Text style={styles.finalizeCardText}>
+                    Você está prestes a finalizar esta vistoria:
+                  </Text>
+                  
+                  <View style={styles.finalizeDetails}>
+                    <Text style={styles.finalizeDetailItem}>
+                      • {draftVistoria.ambientes.length} ambiente(s) cadastrado(s)
+                    </Text>
+                    <Text style={styles.finalizeDetailItem}>
+                      • {draftVistoria.ambientes.reduce((total, amb) => total + (amb.fotos?.length || 0), 0)} foto(s) capturada(s)
+                    </Text>
+                    {observacoesGerais && (
+                      <Text style={styles.finalizeDetailItem}>
+                        • Observações gerais adicionadas
+                      </Text>
+                    )}
+                  </View>
+                  
+                  <Text style={styles.finalizeWarning}>
+                    Após finalizar, a vistoria será salva e você poderá continuar adicionando fotos se necessário.
+                  </Text>
+                </Card>
+                
+                <View style={styles.finalizeActions}>
+                  <Button
+                    title="Voltar para Revisão"
+                    onPress={() => setCurrentStep(2)}
+                    variant="outline"
+                    style={styles.finalizeBackButton}
+                  />
+                  <Button
+                     title="Finalizar Vistoria"
+                     onPress={handleFinalize}
+                     loading={loading}
+                     style={styles.finalizeConfirmButton}
+                   />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.finalizeContent}>
+                <CheckCircle size={64} color={colors.success} />
+                <Text style={styles.finalizeTitle}>Vistoria Finalizada!</Text>
+                <Text style={styles.finalizeText}>
+                  A vistoria foi salva com sucesso. Você pode continuar adicionando fotos ou gerar o relatório final.
+                </Text>
+                
+                <View style={styles.finalizeOptions}>
+                  <Button
+                    title="Ver Vistoria"
+                    onPress={() => router.replace(`/vistoria/${draftVistoria.id}`)}
+                    style={styles.finalizeOptionButton}
+                  />
+                  <Button
+                    title="Nova Vistoria"
+                    onPress={() => router.replace('/(tabs)')}
+                    variant="outline"
+                    style={styles.finalizeOptionButton}
+                  />
+                </View>
+              </View>
+            )}
           </View>
         );
 
@@ -492,6 +617,15 @@ const styles = StyleSheet.create({
   ambienteCard: {
     marginBottom: spacing.sm,
   },
+  ambienteHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  ambienteInfo: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
   ambienteNome: {
     fontSize: typography.size.md,
     fontFamily: typography.fontFamily.semibold,
@@ -502,6 +636,26 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.regular,
     color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  ambienteFotos: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.primary,
+  },
+  cameraButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary + '20',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    gap: spacing.xs,
+  },
+  cameraButtonText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.primary,
   },
   resumoCard: {
     padding: spacing.lg,
@@ -518,9 +672,99 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
+  resumoSubtitle: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  resumoAmbiente: {
+    backgroundColor: colors.surfaceVariant,
+    padding: spacing.sm,
+    borderRadius: 6,
+    marginBottom: spacing.xs,
+  },
+  resumoAmbienteNome: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  resumoAmbienteInfo: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  resumoAmbienteComentario: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  observacoesInput: {
+    marginTop: spacing.lg,
+  },
+  finalizePreview: {
+    flex: 1,
+  },
+  finalizeCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  finalizeCardTitle: {
+    fontSize: typography.size.lg,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  finalizeCardText: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  finalizeDetails: {
+    backgroundColor: colors.surfaceVariant,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.md,
+  },
+  finalizeDetailItem: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  finalizeWarning: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  finalizeActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  finalizeBackButton: {
+    flex: 1,
+  },
+  finalizeConfirmButton: {
+    flex: 1,
+  },
   finalizeContent: {
     alignItems: 'center',
     padding: spacing.xxl,
+  },
+  finalizeOptions: {
+    width: '100%',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  finalizeOptionButton: {
+    width: '100%',
   },
   finalizeTitle: {
     fontSize: typography.size.xl,

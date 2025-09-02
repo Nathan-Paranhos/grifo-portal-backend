@@ -3,19 +3,22 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { SupabaseService } from '@/services/supabase';
+import grifoApiService from '@/services/grifoApi';
 import { OfflineService } from '@/services/offline';
+import { useMe } from '@/hooks/useMe';
 import { Card } from '@/components/ui/Card';
 import { colors, typography, spacing } from '@/constants/colors';
 import { User, LogOut, Trash2, Download, HardDrive, Wifi, WifiOff } from 'lucide-react-native';
 import NetInfo from '@react-native-community/netinfo';
+import { NotificationSettings } from '@/components/NotificationSettings';
+import { SyncStatus } from '@/components/SyncStatus';
 
 export default function SettingsScreen() {
-  const [user, setUser] = useState<any>(null);
+  const { data: user } = useMe(true);
   const [storageInfo, setStorageInfo] = useState({ used: 0, available: 0 });
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    loadUserData();
     loadStorageInfo();
     checkNetworkStatus();
     
@@ -27,14 +30,7 @@ export default function SettingsScreen() {
     return () => unsubscribe();
   }, []);
 
-  const loadUserData = async () => {
-    try {
-      const currentUser = await SupabaseService.getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      // Error loading user data handled silently
-    }
-  };
+
 
   const loadStorageInfo = async () => {
     try {
@@ -65,11 +61,16 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await SupabaseService.signOut();
+              // Logout do Supabase Auth
+      await SupabaseService.signOut();
+              
+              // Limpar token local
+              await grifoApiService.logout();
+              
               router.replace('/login');
             } catch (error) {
-                // Error signing out handled silently
-              }
+              console.warn('Erro ao fazer logout:', error);
+            }
           },
         },
       ]
@@ -154,6 +155,9 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
+        {/* Sync Status */}
+        <SyncStatus showDetails={true} />
+
         {/* Storage Info */}
         <Card style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -175,6 +179,9 @@ export default function SettingsScreen() {
             </View>
           </View>
         </Card>
+
+        {/* Notification Settings */}
+        <NotificationSettings />
 
         {/* Actions */}
         <Card style={styles.section}>

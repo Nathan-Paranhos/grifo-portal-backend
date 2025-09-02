@@ -22,8 +22,12 @@ import {
   Download,
   Trash2,
   Settings,
-  RefreshCw
+  RefreshCw,
+  CheckCircle
 } from 'lucide-react-native';
+import LocationCapture from '@/components/LocationCapture';
+import { SignatureCapture } from '@/components/SignatureCapture';
+import { SignatureList } from '@/components/SignatureList';
 
 interface VistoriaDetalhes extends Vistoria {
   imovel?: Imovel;
@@ -38,6 +42,13 @@ export default function VistoriaDetailsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showPhotoActions, setShowPhotoActions] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'info' | 'fotos' | 'relatorio'>('info');
+  const [finalizing, setFinalizing] = useState(false);
+  const [locationData, setLocationData] = useState<{
+    latitude: number;
+    longitude: number;
+    address?: string;
+  } | null>(null);
+  const [locationSaved, setLocationSaved] = useState(false);
 
   // Hook para gerenciar fotos
   const {
@@ -64,6 +75,18 @@ export default function VistoriaDetailsScreen() {
       loadVistoriaDetails();
     }
   }, [id]);
+
+  // Verificar se já existe localização salva
+  useEffect(() => {
+    if (vistoria?.latitude && vistoria?.longitude) {
+      setLocationData({
+        latitude: vistoria.latitude,
+        longitude: vistoria.longitude,
+        address: vistoria.endereco_gps
+      });
+      setLocationSaved(true);
+    }
+  }, [vistoria]);
 
   const loadVistoriaDetails = async () => {
     if (!id) return;
@@ -155,10 +178,55 @@ export default function VistoriaDetailsScreen() {
   }, [deletePhoto]);
 
   const handleTakePhoto = () => {
-    router.push({
-      pathname: '/(tabs)/camera',
-      params: { vistoriaId: id }
-    });
+    if (vistoria?.status === 'finalizada') {
+      Alert.alert(
+        'Vistoria Finalizada',
+        'Esta vistoria já foi finalizada, mas você pode adicionar fotos complementares.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { 
+            text: 'Continuar', 
+            onPress: () => {
+              router.push({
+                pathname: '/(tabs)/camera',
+                params: { vistoriaId: id }
+              });
+            }
+          }
+        ]
+      );
+    } else {
+      router.push({
+        pathname: '/(tabs)/camera',
+        params: { vistoriaId: id }
+      });
+    }
+  };
+
+  const handleBatchPhoto = () => {
+    if (vistoria?.status === 'finalizada') {
+      Alert.alert(
+        'Vistoria Finalizada',
+        'Esta vistoria já foi finalizada, mas você pode adicionar fotos complementares em lote.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { 
+            text: 'Continuar', 
+            onPress: () => {
+              router.push({
+                pathname: '/vistoria/batch-camera',
+                params: { vistoriaId: id }
+              });
+            }
+          }
+        ]
+      );
+    } else {
+      router.push({
+        pathname: '/vistoria/batch-camera',
+        params: { vistoriaId: id }
+      });
+    }
   };
 
   const handleGenerateReport = async () => {
@@ -171,6 +239,83 @@ export default function VistoriaDetailsScreen() {
         // Error generating report handled silently
         Alert.alert('Erro', 'Não foi possível gerar o relatório');
     }
+  };
+
+  const handleLocationCapture = useCallback(async (location: { latitude: number; longitude: number; address?: string }) => {
+    setLocationData(location);
+    
+    // Salvar localização no banco de dados
+    try {
+      const { error } = await supabase
+        .from('vistorias')
+        .update({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          endereco_gps: location.address,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setLocationSaved(true);
+      Alert.alert('Sucesso', 'Localização capturada e salva com sucesso!');
+      
+      // Recarregar dados da vistoria
+      await loadVistoriaDetails();
+    } catch (error) {
+      console.error('Erro ao salvar localização:', error);
+      Alert.alert('Erro', 'Localização capturada, mas não foi possível salvar no servidor.');
+    }
+  }, [id]);
+
+  const handleLocationError = useCallback((error: string) => {
+    console.error('Erro de localização:', error);
+  }, []);
+
+  const handleFinalizeVistoria = async () => {
+    if (!vistoria || vistoria.status === 'finalizada') return;
+
+    Alert.alert(
+      'Finalizar Vistoria',
+      'Tem certeza que deseja finalizar esta vistoria? Após finalizada, você ainda poderá adicionar fotos complementares.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Finalizar',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setFinalizing(true);
+              
+              // Atualizar status da vistoria para finalizada
+              const { error } = await supabase
+                .from('vistorias')
+                .update({
+                  status: 'finalizada',
+                  finalized_at: new Date().toISOString()
+                })
+                .eq('id', vistoria.id);
+
+              if (error) throw error;
+
+              // Recarregar dados da vistoria
+              await loadVistoriaDetails();
+              
+              Alert.alert(
+                'Sucesso',
+                'Vistoria finalizada com sucesso! Você ainda pode adicionar fotos complementares se necessário.'
+              );
+            } catch (error) {
+              console.error('Erro ao finalizar vistoria:', error);
+              Alert.alert('Erro', 'Não foi possível finalizar a vistoria. Tente novamente.');
+            } finally {
+              setFinalizing(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -230,6 +375,16 @@ export default function VistoriaDetailsScreen() {
           Vistoria de {vistoria?.tipo === 'entrada' ? 'Entrada' : 'Saída'}
         </Text>
       </Card>
+
+      {/* Captura de Localização */}
+      <LocationCapture
+        onLocationCapture={handleLocationCapture}
+        onError={handleLocationError}
+        autoCapture={vistoria?.status === 'em_andamento' && !locationSaved}
+        showAddress={true}
+        disabled={vistoria?.status === 'finalizada' && locationSaved}
+        style={{ marginBottom: spacing.md }}
+      />
 
       {/* Informações do Imóvel */}
       <Card style={styles.infoCard}>
@@ -300,11 +455,60 @@ export default function VistoriaDetailsScreen() {
         </View>
         <Text style={styles.observacoes}>Nenhuma observação registrada</Text>
       </Card>
+
+      {/* Assinaturas Digitais */}
+      <Card style={styles.infoCard}>
+        <SignatureList
+          vistoriaId={id!}
+          showActions={vistoria?.status !== 'finalizada'}
+        />
+      </Card>
+
+      {/* Captura de Assinatura */}
+      {vistoria?.status !== 'finalizada' && (
+        <Card style={styles.infoCard}>
+          <SignatureCapture
+            vistoriaId={id!}
+            onSignatureSaved={() => {
+              // Recarregar a lista de assinaturas
+              // A SignatureList já tem seu próprio refresh
+            }}
+          />
+        </Card>
+      )}
+
+      {/* Botão de Finalização */}
+      {vistoria?.status !== 'finalizada' && (
+        <Card style={styles.finalizeCard}>
+          <View style={styles.finalizeHeader}>
+            <CheckCircle size={20} color={colors.success} />
+            <Text style={styles.finalizeTitle}>Finalizar Vistoria</Text>
+          </View>
+          <Text style={styles.finalizeDescription}>
+            Finalize esta vistoria para marcar como concluída. Você ainda poderá adicionar fotos complementares após a finalização.
+          </Text>
+          <Button
+            title="Finalizar Vistoria"
+            onPress={handleFinalizeVistoria}
+            loading={finalizing}
+            style={styles.finalizeButton}
+          />
+        </Card>
+      )}
     </ScrollView>
   );
 
   const renderFotosTab = () => (
     <View style={styles.tabContent}>
+      {/* Banner informativo para vistoria finalizada */}
+      {vistoria?.status === 'finalizada' && (
+        <Card style={styles.finalizadaBanner}>
+          <Text style={styles.finalizadaBannerText}>
+            ✅ Vistoria finalizada - Você ainda pode adicionar fotos complementares
+          </Text>
+        </Card>
+      )}
+      
       {/* Header com estatísticas */}
       <Card style={styles.photoStatsCard}>
         <View style={styles.photoStats}>
@@ -376,14 +580,27 @@ export default function VistoriaDetailsScreen() {
         numColumns={2}
       />
 
-      {/* Botão flutuante para adicionar foto */}
-      <TouchableOpacity
-        style={styles.fabButton}
-        onPress={handleTakePhoto}
-        disabled={uploading}
-      >
-        <Camera size={24} color={colors.background} />
-      </TouchableOpacity>
+      {/* Botões flutuantes para adicionar fotos */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={[styles.fabButton, styles.fabSecondary]}
+          onPress={handleTakePhoto}
+          disabled={uploading}
+        >
+          <Camera size={20} color={colors.background} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.fabButton}
+          onPress={handleBatchPhoto}
+          disabled={uploading}
+        >
+          <View style={styles.fabBatchIcon}>
+            <Camera size={16} color={colors.background} />
+            <Text style={styles.fabBatchText}>+</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -678,10 +895,14 @@ const styles = StyleSheet.create({
   actionBtn: {
     flex: 1,
   },
-  fabButton: {
+  fabContainer: {
     position: 'absolute',
     bottom: spacing.lg,
     right: spacing.lg,
+    flexDirection: 'column',
+    gap: spacing.sm,
+  },
+  fabButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -693,6 +914,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  fabSecondary: {
+    backgroundColor: colors.secondary,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  fabBatchIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabBatchText: {
+    fontSize: 16,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.background,
+    marginLeft: 2,
   },
   reportCard: {
     alignItems: 'center',
@@ -742,6 +980,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     textAlign: 'center',
   },
+  finalizadaBanner: {
+    backgroundColor: colors.success + '20',
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.success,
+  },
+  finalizadaBannerText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.success,
+    textAlign: 'center',
+  },
   errorBanner: {
     backgroundColor: colors.danger + '20',
     padding: spacing.md,
@@ -753,5 +1004,29 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     color: colors.danger,
     textAlign: 'center',
+  },
+  finalizeCard: {
+    marginBottom: spacing.lg,
+  },
+  finalizeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  finalizeTitle: {
+    fontSize: typography.size.md,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textPrimary,
+  },
+  finalizeDescription: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: spacing.lg,
+  },
+  finalizeButton: {
+    backgroundColor: colors.success,
   },
 });

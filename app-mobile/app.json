@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "grifo-app",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.grifo.app",
@@ -18,7 +18,9 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLName": "grifo-app",
-            "CFBundleURLSchemes": ["grifo-app"]
+            "CFBundleURLSchemes": [
+              "grifo-app"
+            ]
           }
         ]
       }
@@ -31,7 +33,11 @@
         "CAMERA",
         "WRITE_EXTERNAL_STORAGE",
         "READ_EXTERNAL_STORAGE",
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "intentFilters": [
         {
@@ -46,7 +52,10 @@
               "scheme": "grifo-app"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -56,14 +65,36 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router", 
-      "expo-font", 
-      "expo-web-browser",
+      "expo-router",
+      "expo-font",
       "expo-camera",
-      "expo-media-library"
+      "expo-media-library",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 24,
+            "kotlinVersion": "2.0.21",
+            "javaVersion": "17",
+            "gradleVersion": "8.9",
+            "androidGradlePluginVersion": "8.7.0",
+            "enableProguardInReleaseBuilds": false,
+            "enableHermes": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5faf1373-a3e8-408e-ac53-ba2777f89725"
+      }
+    },
+    "owner": "np-tech"
   }
 }

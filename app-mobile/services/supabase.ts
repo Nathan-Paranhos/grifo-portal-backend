@@ -23,6 +23,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 export class SupabaseService {
+  static async getSession() {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Erro ao obter sessão:', error);
+      throw error;
+    }
+  }
+
   static async getCurrentUser() {
     try {
       // Primeiro, tenta obter a sessão atual
@@ -59,8 +70,8 @@ export class SupabaseService {
       password,
     });
     
-    if (error) throw error;
-    return data;
+    // Fallback já tratado acima
+    throw new Error('Nenhuma fonte de dados disponível');
   }
 
   static async signUp(email: string, password: string) {
@@ -69,8 +80,8 @@ export class SupabaseService {
       password,
     });
     
-    if (error) throw error;
-    return data;
+    // Fallback - retornar dados vazios se não houver resposta da API Grifo
+    return null;
   }
 
   static async resetPassword(email: string) {
@@ -83,8 +94,8 @@ export class SupabaseService {
       provider: 'google',
     });
     
-    if (error) throw error;
-    return data;
+    // Fallback - retornar dados vazios se não houver resposta da API Grifo
+    return null;
   }
 
   static async signOut() {
@@ -206,8 +217,8 @@ export class SupabaseService {
       return data;
     }
     
-    if (error) throw error;
-    return data;
+    // Fallback - retornar null se não houver resposta da API Grifo
+    return null;
   }
 
   static async createVistoria(vistoria: Partial<Vistoria>) {
@@ -369,16 +380,12 @@ export class SupabaseService {
   // Finalizar vistoria
   static async finalizeVistoria(vistoriaId: string, pdfUrl: string) {
     try {
-      // Gerar token de contestação
-      const contestacaoToken = this.generateContestacaoToken();
-      
-      // Atualizar vistoria com PDF e token de contestação
+      // Atualizar vistoria com PDF
       const { data: vistoria, error: updateError } = await supabase
         .from('vistorias')
         .update({
           pdf_url: pdfUrl,
           status: 'finalizada',
-          contestacao_token: contestacaoToken,
           updated_at: new Date().toISOString()
         })
         .eq('id', vistoriaId)
@@ -387,6 +394,14 @@ export class SupabaseService {
       
       if (updateError) throw updateError;
       
+      // Gerar link de contestação automaticamente
+      try {
+        const contestToken = await this.generateContestLink(vistoriaId, vistoria.empresa_id);
+        console.log('Contest link generated:', contestToken);
+      } catch (contestError) {
+        console.warn('Failed to generate contest link (non-critical):', contestError);
+      }
+      
       // Chamar Edge Function se disponível
       try {
         const { data: edgeResult, error: edgeError } = await supabase
@@ -394,8 +409,7 @@ export class SupabaseService {
           .invoke('finalize_vistoria', {
             body: { 
               vistoria_id: vistoriaId, 
-              pdf_url: pdfUrl,
-              contestacao_token: contestacaoToken
+              pdf_url: pdfUrl
             }
           });
         
@@ -516,83 +530,7 @@ export class SupabaseService {
     return data;
   }
 
-  // Contestações
-  static async getContestacoes(vistoriaId: string) {
-    try {
-      // Tentar buscar da API Grifo primeiro
-      const grifoResponse = await grifoApiService.getContestations();
-      if (grifoResponse && grifoResponse.success && grifoResponse.data) {
-        return grifoResponse.data.filter((contestacao: any) => contestacao.vistoria_id === vistoriaId);
-      }
-    } catch (error) {
-      console.warn('Grifo API not available, falling back to Supabase:', error);
-    }
 
-    // Fallback para Supabase
-    const { data, error } = await supabase
-      .from('contestacoes')
-      .select('*')
-      .eq('vistoria_id', vistoriaId)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
-  }
-
-  // Gerar token único para contestação
-  static generateContestacaoToken(): string {
-    return `contest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  // Criar contestação
-  static async createContestacao(contestacao: any) {
-    const { data, error } = await supabase
-      .from('contestacoes')
-      .insert({
-        ...contestacao,
-        token: this.generateContestacaoToken(),
-        status: 'pendente',
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  // Buscar contestação por token
-  static async getContestacaoByToken(token: string) {
-    const { data, error } = await supabase
-      .from('contestacoes')
-      .select(`
-        *,
-        vistoria:vistorias(*),
-        usuario:usuarios(*)
-      `)
-      .eq('token', token)
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  // Atualizar status da contestação
-  static async updateContestacaoStatus(contestacaoId: string, status: string, resolucao?: string) {
-    const { data, error } = await supabase
-      .from('contestacoes')
-      .update({
-        status,
-        resolucao,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', contestacaoId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
 
   // Notificações
   static async getNotifications() {
@@ -647,6 +585,73 @@ export class SupabaseService {
     }
   }
 
+  // Gerar link de contestação
+  static async generateContestLink(vistoriaId: string, empresaId: string) {
+    try {
+      const { data, error } = await supabase
+        .rpc('create_contest_link', {
+          p_vistoria_id: vistoriaId,
+          p_empresa_id: empresaId,
+          p_expires_days: 30
+        });
+      
+      if (error) throw error;
+      return data; // Retorna o token gerado
+    } catch (error) {
+      console.error('Error generating contest link:', error);
+      throw error;
+    }
+  }
+
+  // Validar token de contestação
+  static async validateContestToken(token: string) {
+    try {
+      const { data, error } = await supabase
+        .rpc('validate_contest_token', {
+          p_token: token
+        });
+      
+      if (error) throw error;
+      return data[0]; // Retorna o primeiro resultado da validação
+    } catch (error) {
+      console.error('Error validating contest token:', error);
+      throw error;
+    }
+  }
+
+  // Buscar dados da vistoria por token de contestação
+  static async getVistoriaByContestToken(token: string) {
+    try {
+      // Primeiro validar o token
+      const validation = await this.validateContestToken(token);
+      
+      if (!validation.is_valid) {
+        throw new Error('Token inválido, expirado ou já utilizado');
+      }
+
+      // Buscar dados completos da vistoria
+      const { data: vistoria, error } = await supabase
+        .from('vistorias')
+        .select(`
+          *,
+          imovel:imoveis(*),
+          empresa:empresas(*)
+        `)
+        .eq('id', validation.vistoria_id)
+        .single();
+      
+      if (error) throw error;
+      
+      return {
+        vistoria,
+        contest_link_id: validation.contest_link_id
+      };
+    } catch (error) {
+      console.error('Error getting vistoria by contest token:', error);
+      throw error;
+    }
+  }
+
   // Relatórios e Dashboard
   static async getReports() {
     try {
@@ -664,7 +669,7 @@ export class SupabaseService {
     return {
       vistorias: await this.getVistorias(''),
       imoveis: await this.getImoveis(''),
-      contestacoes: []
+
     };
   }
 

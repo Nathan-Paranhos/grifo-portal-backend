@@ -21,6 +21,9 @@ export interface Imovel {
   tipo: 'apartamento' | 'casa' | 'comercial';
   codigo: string;
   proprietario: string;
+  cep?: string;
+  cidade?: string;
+  estado?: string;
   created_at: string;
 }
 
@@ -30,9 +33,14 @@ export interface Vistoria {
   imovel_id: string;
   vistoriador_id: string;
   tipo: 'entrada' | 'saida' | 'periodica';
-  status: 'rascunho' | 'finalizada' | 'contestada';
+  status: 'rascunho' | 'finalizada';
   pdf_url?: string;
-  contestacao_token?: string;
+  cliente?: string;
+  endereco?: string;
+  tipo_vistoria?: string;
+  observacoes?: string;
+  imovel?: any;
+  ambientes?: any[];
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +53,10 @@ export interface DraftVistoria {
   ambientes: DraftAmbiente[];
   synced: boolean;
   status?: 'pending_sync' | 'synced' | 'error';
+  cliente?: string;
+  endereco?: string;
+  tipo_vistoria?: string;
+  observacoes?: string;
   created_at: string;
 }
 

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import { supabase } from '@/services/supabase';
+import { SupabaseService } from '@/services/supabase';
+import grifoApiService from '@/services/grifoApi';
 import { PhotoOptimizer } from '@/services/photoOptimizer';
 
 interface Photo {
@@ -205,22 +206,14 @@ export function usePhotoManager(options: UsePhotoManagerOptions = {}) {
     safeSetState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const { data: fotos, error } = await supabase
-        .from('vistoria_fotos')
-        .select(`
-          id,
-          url,
-          thumbnail_url,
-          descricao,
-          ambiente,
-          tamanho_arquivo,
-          largura,
-          altura
-        `)
-        .eq('vistoria_id', vistoriaId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
+      // Usar grifoApiService para buscar fotos
+      const response = await grifoApiService.getVistoriaFotos(vistoriaId);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Erro ao carregar fotos');
+      }
+      
+      const fotos = response.data || [];
 
       const photosWithCache = await Promise.all(
         (fotos || []).map(async (foto) => {
@@ -357,31 +350,14 @@ export function usePhotoManager(options: UsePhotoManagerOptions = {}) {
   // Deletar foto
   const deletePhoto = useCallback(async (photo: Photo): Promise<boolean> => {
     try {
-      // Remover do storage
-      const photoPath = photo.url.split('/').pop();
-      if (photoPath) {
-        await supabase.storage
-          .from('vistoria-fotos')
-          .remove([photoPath]);
+      // A remoção do storage será feita pela API do backend
+      // que já gerencia tanto o banco quanto o storage
+
+      // Remover do banco via API
+      const deleteResponse = await grifoApiService.deleteVistoriaFoto(photo.id);
+      if (!deleteResponse.success) {
+        throw new Error(deleteResponse.error || 'Erro ao deletar foto do banco');
       }
-
-      // Remover thumbnail se existir
-      if (photo.thumbnailUrl) {
-        const thumbPath = photo.thumbnailUrl.split('/').pop();
-        if (thumbPath) {
-          await supabase.storage
-            .from('vistoria-fotos')
-            .remove([thumbPath]);
-        }
-      }
-
-      // Remover do banco
-      const { error } = await supabase
-        .from('vistoria_fotos')
-        .delete()
-        .eq('id', photo.id);
-
-      if (error) throw error;
 
       // Remover do cache local
       const cacheKey = `${photo.id}.jpg`;

@@ -3,7 +3,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { colors, spacing } from '@/constants/colors';
 import { AuthGuard } from '@/components/AuthGuard';
-import { Home, FileText, Camera, Settings, Cloud } from 'lucide-react-native';
+import { Home, FileText, Camera, Settings, BarChart3 } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -70,11 +70,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="onedrive"
+          name="reports"
           options={{
-            title: 'OneDrive',
+            title: 'Relatórios',
             tabBarIcon: ({ color, size }) => (
-              <Cloud size={size || 24} color={color} />
+              <BarChart3 size={size || 24} color={color} />
             ),
           }}
         />

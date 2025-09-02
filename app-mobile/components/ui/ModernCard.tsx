@@ -7,7 +7,7 @@ interface ModernCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
   padding?: 'none' | 'small' | 'medium' | 'large';
-  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
+  variant?: 'default' | 'elevated' | 'outlined' | 'glass' | 'gradient';
   size?: 'small' | 'medium' | 'large';
   shadow?: boolean;
   borderRadius?: 'none' | 'small' | 'medium' | 'large' | 'full';
@@ -49,7 +49,7 @@ export function ModernCard({
     if (variant === 'gradient' && gradientColors) {
       return (
         <LinearGradient
-          colors={gradientColors}
+          colors={gradientColors as unknown as readonly [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={getCardStyle()}

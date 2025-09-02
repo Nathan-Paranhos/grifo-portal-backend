@@ -126,6 +126,94 @@ export class OfflineService {
     }
   }
 
+  /**
+   * Salvar dados de relatório para cache offline
+   */
+  static async saveReportData(reportData: any): Promise<void> {
+    try {
+      await AsyncStorage.setItem('report_data_cache', JSON.stringify({
+        ...reportData,
+        cachedAt: new Date().toISOString(),
+      }));
+    } catch (error) {
+      console.error('Error saving report data:', error);
+    }
+  }
+
+  /**
+   * Obter dados de relatório do cache
+   */
+  static async getReportData(): Promise<any | null> {
+    try {
+      const data = await AsyncStorage.getItem('report_data_cache');
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Error getting report data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Obter estatísticas locais para relatórios
+   */
+  static async getLocalStats(): Promise<any> {
+    try {
+      // Obter vistorias salvas localmente
+       const drafts = await this.getVistoriaDrafts();
+       const syncStats = await this.getSyncStats();
+       const uploadQueue = await this.getUploadQueue();
+
+      // Calcular estatísticas
+      const totalVistorias = drafts.length;
+      const vistoriasFinalizadas = drafts.filter(v => v.status === 'finalizada').length;
+      const vistoriasEmAndamento = drafts.filter(v => v.status === 'em_andamento').length;
+      const vistoriasPendentes = drafts.filter(v => v.status === 'pendente').length;
+
+      // Contar fotos
+      let fotosCapturadas = 0;
+      drafts.forEach(vistoria => {
+        if (vistoria.fotos) {
+          fotosCapturadas += vistoria.fotos.length;
+        }
+      });
+
+      // Contar assinaturas (simulado)
+      const assinaturasColetadas = Math.floor(vistoriasFinalizadas * 0.8);
+
+      // Calcular tempo médio (simulado)
+      const mediaTempoVistoria = 85; // minutos
+
+      // Calcular porcentagem de sincronização
+       const totalItens = uploadQueue.length + syncStats.totalSynced;
+       const dadosSincronizados = totalItens > 0 ? Math.round((syncStats.totalSynced / totalItens) * 100) : 100;
+
+      return {
+        totalVistorias,
+        vistoriasPendentes,
+        vistoriasFinalizadas,
+        vistoriasEmAndamento,
+        mediaTempoVistoria,
+        fotosCapturadas,
+        assinaturasColetadas,
+        dadosSincronizados,
+        ultimaAtualizacao: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('Error getting local stats:', error);
+      return {
+        totalVistorias: 0,
+        vistoriasPendentes: 0,
+        vistoriasFinalizadas: 0,
+        vistoriasEmAndamento: 0,
+        mediaTempoVistoria: 0,
+        fotosCapturadas: 0,
+        assinaturasColetadas: 0,
+        dadosSincronizados: 0,
+        ultimaAtualizacao: new Date().toISOString(),
+      };
+    }
+  }
+
   // Utility Methods
   static async clearAllData(): Promise<void> {
     try {

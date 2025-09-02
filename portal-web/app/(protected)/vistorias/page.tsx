@@ -4,7 +4,7 @@ import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
-import { supabase } from "../../../lib/supabase";
+import grifoPortalApiService, { Inspection } from "../../../lib/api";
 
 type VisStatus = "agendada" | "em_andamento" | "concluida" | "contestada";
 type VisItem = {
@@ -16,38 +16,28 @@ type VisItem = {
   status: VisStatus;
 };
 
-// Função para buscar vistorias do Supabase
+// Função para buscar vistorias da API
 async function fetchVistorias(): Promise<VisItem[]> {
   try {
-    const { data, error } = await supabase
-      .from('vistorias')
-      .select(`
-        id,
-        data_agendamento,
-        status,
-        imoveis(
-          endereco,
-          tipo
-        ),
-        users(
-          name
-        )
-      `)
-      .order('created_at', { ascending: false });
+    const response = await grifoPortalApiService.getInspections();
     
-    if (error) {
+    if (!response.success || !response.data) {
       return [];
     }
     
-    return data?.map(vistoria => ({
-      id: vistoria.id,
-      imovel: (vistoria.imoveis as any)?.tipo || 'Imóvel',
-      endereco: (vistoria.imoveis as any)?.endereco || 'Endereço não informado',
-      corretor: (vistoria.users as any)?.name || 'Não informado',
-      data: vistoria.data_agendamento || new Date().toISOString(),
-      status: vistoria.status as VisStatus
-    })) || [];
+    return response.data.map(inspection => ({
+      id: inspection.id || '',
+      imovel: 'Imóvel', // property_title não existe no tipo Inspection
+      endereco: 'Endereço não informado', // property_address não existe no tipo Inspection
+      corretor: 'Não informado', // inspector_name não existe no tipo Inspection
+      data: inspection.created_at || new Date().toISOString(), // scheduled_date não existe no tipo Inspection
+      status: (inspection.status as VisStatus) || 'agendada'
+    }));
   } catch (error) {
+    // Log apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to fetch inspections:', error instanceof Error ? error.message : error);
+    }
     return [];
   }
 }
@@ -129,13 +119,15 @@ export default function VistoriasPage() {
           <p className="text-sm text-muted-foreground">Gestão de vistorias imobiliárias</p>
         </div>
         <Tooltip content="Criar nova vistoria">
-          <a
-            href="#"
+          <button
             className="h-9 inline-flex items-center rounded-md border border-border px-3 text-sm hover:bg-muted/30"
-            onClick={(e) => e.preventDefault()}
+            onClick={() => {
+              // TODO: Implementar modal ou navegação para criar nova vistoria
+              alert('Funcionalidade de criar nova vistoria será implementada em breve');
+            }}
           >
             Nova vistoria
-          </a>
+          </button>
         </Tooltip>
       </div>
 
@@ -194,8 +186,32 @@ export default function VistoriasPage() {
         <div className="mb-2 flex items-center justify-between text-sm">
           <div className="text-muted-foreground">{selected.size} selecionada(s)</div>
           <div className="flex gap-2">
-            <button className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={selected.size === 0} onClick={(e) => e.preventDefault()}>Exportar seleção</button>
-            <button className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={selected.size === 0} onClick={(e) => e.preventDefault()}>Ação em massa</button>
+            <button 
+              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              disabled={selected.size === 0} 
+              onClick={() => {
+                if (selected.size > 0) {
+                  const selectedIds = Array.from(selected);
+                  // TODO: Implementar exportação real
+                  alert(`Exportando ${selectedIds.length} vistorias selecionadas`);
+                }
+              }}
+            >
+              Exportar seleção
+            </button>
+            <button 
+              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              disabled={selected.size === 0} 
+              onClick={() => {
+                if (selected.size > 0) {
+                  const selectedIds = Array.from(selected);
+                  // TODO: Implementar ações em massa reais
+                  alert(`Ação em massa para ${selectedIds.length} vistorias selecionadas`);
+                }
+              }}
+            >
+              Ação em massa
+            </button>
           </div>
         </div>
         {/* Mobile: cards */}

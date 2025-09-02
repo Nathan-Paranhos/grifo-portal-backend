@@ -4,7 +4,7 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
-import { supabase } from "../../../lib/supabase";
+import grifoPortalApiService, { Empresa as ApiEmpresa } from "../../../lib/api";
 
 type EmpresaStatus = "ativa" | "inativa";
 type Empresa = {
@@ -17,28 +17,29 @@ type Empresa = {
   criada_em: string; // ISO
 };
 
-// Função para buscar empresas do Supabase
+// Função para buscar empresas da API
 async function fetchEmpresas(): Promise<Empresa[]> {
   try {
-    const { data, error } = await supabase
-      .from('empresas')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const response = await grifoPortalApiService.getEmpresas();
      
-     if (error) {
+     if (!response.success || !response.data) {
        return [];
      }
     
-    return data?.map(empresa => ({
-      id: empresa.id,
-      nome: empresa.nome,
-      cnpj: empresa.cnpj,
-      contato: empresa.contato || 'Não informado',
-      email: empresa.email,
-      status: empresa.ativo ? 'ativa' : 'inativa',
-      criada_em: empresa.created_at
-    })) || [];
+    return response.data.map(empresa => ({
+      id: empresa.id || '',
+      nome: empresa.name,
+      cnpj: empresa.cnpj || '',
+      contato: empresa.phone || 'Não informado',
+      email: empresa.email || '',
+      status: 'ativa' as EmpresaStatus, // Assumindo que empresas retornadas estão ativas
+      criada_em: empresa.created_at || new Date().toISOString()
+    }));
   } catch (error) {
+    // Log apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to fetch companies:', error instanceof Error ? error.message : error);
+    }
     return [];
   }
 }

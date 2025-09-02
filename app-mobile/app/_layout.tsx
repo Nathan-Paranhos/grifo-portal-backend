@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useFonts, 
   Poppins_400Regular, 
   Poppins_500Medium, 
@@ -16,6 +17,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   useFrameworkReady();
+  const { initialize } = useNotifications();
 
   const [fontsLoaded] = useFonts({
     'Poppins-Regular': Poppins_400Regular,
@@ -29,6 +31,20 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // Inicializar notificações push
+  useEffect(() => {
+    const initNotifications = async () => {
+      try {
+        await initialize();
+        console.log('Push notifications inicializadas');
+      } catch (error) {
+        console.error('Erro ao inicializar push notifications:', error);
+      }
+    };
+
+    initNotifications();
+  }, [initialize]);
 
   if (!fontsLoaded) {
     return null;

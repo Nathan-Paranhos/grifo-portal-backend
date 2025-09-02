@@ -140,12 +140,12 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: spacing.sm,
-    borderRadius: spacing.borderRadius,
+    borderRadius: spacing.borderRadius.sm,
     backgroundColor: `${colors.surface}80`,
   },
   title: {
     fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
+    fontWeight: typography.h3.fontWeight as any,
     color: colors.text,
     textAlign: 'center',
     textShadowColor: `${colors.shadow}30`,
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   subtitle: {
-    fontSize: typography.caption.fontSize,
-    fontWeight: typography.caption.fontWeight,
+    fontSize: typography.size.caption,
+    fontWeight: '400' as any,
     color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.xs,

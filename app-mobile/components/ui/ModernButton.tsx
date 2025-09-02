@@ -137,7 +137,7 @@ export function ModernButton({
             ]}
           >
             <LinearGradient
-              colors={gradColors}
+              colors={gradColors as unknown as readonly [string, string, ...string[]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.gradientContainer, styles[size]]}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.lg,
+    borderRadius: spacing.borderRadius.lg,
     gap: spacing.sm,
   },
   
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.lg,
+    borderRadius: spacing.borderRadius.lg,
     gap: spacing.sm,
   },
   

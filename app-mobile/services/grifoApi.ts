@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuração da API Grifo
-const GRIFO_API_BASE_URL = process.env.EXPO_PUBLIC_GRIFO_API_URL || 'https://grifo-api.onrender.com';
-const GRIFO_API_DEV_URL = 'http://localhost:1000';
+const GRIFO_API_BASE_URL = process.env.EXPO_PUBLIC_GRIFO_API_BASE_URL || 'https://grifo-api-backend.onrender.com';
+const GRIFO_API_DEV_URL = 'http://localhost:10000'; // Para desenvolvimento local
 
 // Configuração do Supabase (fallback)
 const SUPABASE_REST_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/rest/v1` || 'https://fsvwifbvehdhlufauahj.supabase.co/rest/v1';
@@ -10,9 +10,17 @@ const SUPABASE_FUNCTIONS_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/function
 const SUPABASE_AUTH_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/auth/v1` || 'https://fsvwifbvehdhlufauahj.supabase.co/auth/v1';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdndpZmJ2ZWhkaGx1ZmF1YWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MjI1MDYsImV4cCI6MjA3MDE5ODUwNn0.IC-I9QsH2t5o60v70TmzVFmfe8rUuFdMD5kMErQ4CPI';
 
-// Determina se está em desenvolvimento
-const isDevelopment = __DEV__ || process.env.NODE_ENV === 'development';
+// Determina se está em desenvolvimento - prioriza EXPO_PUBLIC_DEV_MODE
+const isDevelopment = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
 const API_BASE_URL = isDevelopment ? GRIFO_API_DEV_URL : GRIFO_API_BASE_URL;
+
+console.log('🔧 API Configuration:', {
+  isDevelopment,
+  EXPO_PUBLIC_DEV_MODE: process.env.EXPO_PUBLIC_DEV_MODE,
+  __DEV__,
+  API_BASE_URL,
+  GRIFO_API_BASE_URL
+});
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -189,7 +197,7 @@ class GrifoApiService {
       
       // Para endpoints do Supabase, sempre adicionar apikey
       if (finalBaseUrl.includes('supabase.co')) {
-        defaultHeaders['apikey'] = SUPABASE_ANON_KEY;
+        (defaultHeaders as any)['apikey'] = SUPABASE_ANON_KEY;
       }
       
       const response = await fetch(url, {
@@ -227,7 +235,7 @@ class GrifoApiService {
     // Primeiro tenta a API Grifo
     if (this.useGrifoApi) {
       try {
-        const response = await fetch(`${this.baseUrl}/api/auth/login`, {
+        const response = await fetch(`${this.baseUrl}/api/v1/auth/app/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -314,7 +322,7 @@ class GrifoApiService {
     // Primeiro tenta a API Grifo
     if (this.useGrifoApi) {
       try {
-        const response = await fetch(`${this.baseUrl}/api/auth/register`, {
+        const response = await fetch(`${this.baseUrl}/api/v1/auth/app/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -409,7 +417,7 @@ class GrifoApiService {
     // Primeiro tenta logout na API Grifo
     if (this.useGrifoApi && this.authToken) {
       try {
-        await fetch(`${this.baseUrl}/api/auth/logout`, {
+        await fetch(`${this.baseUrl}/api/v1/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${this.authToken}`,
@@ -566,21 +574,23 @@ class GrifoApiService {
     return this.makeRequest<Property>(`/api/imoveis/${id}`);
   }
 
-  // Notificações (usando contestações como base)
+  // Notificações (removidas - não utilizadas)
   async getNotifications(): Promise<ApiResponse<Notification[]>> {
-    return this.makeRequest<Notification[]>('/rest/v1/contestacoes', { baseUrl: SUPABASE_REST_URL });
+    return {
+      success: true,
+      data: []
+    };
   }
 
   async markNotificationAsRead(id: string): Promise<ApiResponse<Notification>> {
-    return this.makeRequest<Notification>(`/rest/v1/contestacoes?id=eq.${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ read: true }),
-      baseUrl: SUPABASE_REST_URL
-    });
+    return {
+      success: true,
+      data: {} as Notification
+    };
   }
 
   // Upload de fotos usando API Grifo com fallback
-  async uploadPhoto(file: File | Blob, filename: string): Promise<ApiResponse<{ url: string; filename: string }>> {
+  async uploadPhoto(file: any, filename: string): Promise<ApiResponse<{ url: string; filename: string }>> {
     const formData = new FormData();
     formData.append('file', file, filename);
     
@@ -606,7 +616,7 @@ class GrifoApiService {
   }
 
   // Upload de arquivos genérico (fallback para Supabase Storage)
-  async uploadFile(file: File | Blob, filename: string): Promise<ApiResponse<{ url: string; filename: string }>> {
+  async uploadFile(file: any, filename: string): Promise<ApiResponse<{ url: string; filename: string }>> {
     const formData = new FormData();
     formData.append('file', file, filename);
     
@@ -665,11 +675,11 @@ class GrifoApiService {
 
   // Usuários usando API Grifo com fallback
   async getUsers(): Promise<ApiResponse<User[]>> {
-    return this.makeRequest<User[]>('/api/users/profile');
+    return this.makeRequest<User[]>('/api/v1/users/app');
   }
 
   async updateUserProfile(updates: Partial<User>): Promise<ApiResponse<User>> {
-    return this.makeRequest<User>('/api/users/profile', {
+    return this.makeRequest<User>('/api/v1/users/profile', {
       method: 'PUT',
       body: JSON.stringify(updates)
     });
@@ -679,8 +689,36 @@ class GrifoApiService {
     return this.makeRequest<any>('/api/users/permissions');
   }
 
-  async getContestations(): Promise<ApiResponse<any[]>> {
-    return this.makeRequest<any[]>('/rest/v1/contestacoes', { baseUrl: SUPABASE_REST_URL });
+
+
+  // Métodos para fotos de vistoria (compatibilidade com usePhotoManager)
+  async getVistoriaFotos(vistoriaId: string): Promise<ApiResponse<any[]>> {
+    return this.makeRequest<any[]>(`/api/vistorias/${vistoriaId}/fotos`);
+  }
+
+  async deleteVistoriaFoto(fotoId: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>(`/api/fotos/${fotoId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async createVistoriaFoto(fotoData: {
+    vistoria_id: string;
+    url: string;
+    url_thumbnail?: string;
+    ambiente: string;
+    descricao?: string;
+    tamanho_arquivo: number;
+    formato: string;
+    comprimida: boolean;
+    largura: number;
+    altura: number;
+    hash_arquivo: string;
+  }): Promise<ApiResponse<any>> {
+    return this.makeRequest<any>('/api/fotos', {
+      method: 'POST',
+      body: JSON.stringify(fotoData)
+    });
   }
 
   // Verificar conectividade
@@ -716,47 +754,26 @@ class GrifoApiService {
       };
     }
 
-    // Primeiro tenta a API Grifo
-    if (this.useGrifoApi) {
-      try {
-        const response = await fetch(`${this.baseUrl}/api/users/profile`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${this.authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          return {
-            success: true,
-            data: data
-          };
-        }
-
-        // Se falhar, tenta Supabase como fallback
-        console.warn('API Grifo getCurrentUser failed, trying Supabase fallback');
-      } catch (error) {
-        console.warn('API Grifo connection failed, trying Supabase fallback:', error);
-      }
-    }
-
-    // Fallback para Supabase Auth
     try {
-      const response = await fetch(`${SUPABASE_AUTH_URL}/user`, {
+      const response = await fetch(`${this.baseUrl}/api/v1/auth/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.authToken}`,
-          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
         },
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        // Token expirado ou inválido
+      if (response.ok) {
+        return {
+          success: true,
+          data: data
+        };
+      }
+
+      // Token expirado ou inválido
+      if (response.status === 401) {
         await this.clearAuthToken();
         return {
           success: false,
@@ -765,15 +782,14 @@ class GrifoApiService {
       }
 
       return {
-        success: true,
-        data: data
+        success: false,
+        error: data.message || 'Erro ao obter usuário atual'
       };
     } catch (error) {
       console.error('Get current user error:', error);
-      await this.clearAuthToken();
       return {
         success: false,
-        error: 'Erro ao obter usuário atual'
+        error: 'Erro de conexão'
       };
     }
   }

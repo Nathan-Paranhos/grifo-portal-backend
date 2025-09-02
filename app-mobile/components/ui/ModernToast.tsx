@@ -28,22 +28,22 @@ export function ModernToast({
   const typeConfig = {
     success: {
       icon: CheckCircle,
-      colors: [colors.success, `${colors.success}E0`],
+      colors: [colors.success, `${colors.success}E0`, colors.success] as const,
       iconColor: colors.surface,
     },
     error: {
       icon: XCircle,
-      colors: [colors.danger, `${colors.danger}E0`],
+      colors: [colors.danger, `${colors.danger}E0`, colors.danger] as const,
       iconColor: colors.surface,
     },
     warning: {
       icon: AlertCircle,
-      colors: [colors.warning, `${colors.warning}E0`],
+      colors: [colors.warning, `${colors.warning}E0`, colors.warning] as const,
       iconColor: colors.surface,
     },
     info: {
       icon: Info,
-      colors: [colors.accent, `${colors.accent}E0`],
+      colors: [colors.secondary, `${colors.secondary}E0`, colors.secondary] as const,
       iconColor: colors.surface,
     },
   };

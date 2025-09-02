@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { SupabaseService } from '@/services/supabase';
+import grifoApiService from '@/services/grifoApi';
 import { OfflineService } from '@/services/offline';
 import { ModernCard } from '@/components/ui/ModernCard';
 import { ModernButton } from '@/components/ui/ModernButton';
@@ -37,7 +38,7 @@ export default function VistoriasScreen() {
 
   useEffect(() => {
     filterData();
-  }, [filterData]);
+  }, [searchQuery, vistorias, drafts]);
 
   const loadDrafts = async () => {
     try {
@@ -51,7 +52,35 @@ export default function VistoriasScreen() {
 
   const loadVistorias = async () => {
     try {
-      // Verificar se há usuário autenticado
+      // Verificar se há usuário autenticado na API Grifo
+      if (grifoApiService.isAuthenticated()) {
+        const inspectionsResponse = await grifoApiService.getInspections();
+        if (inspectionsResponse.success) {
+          // Mapear Inspection[] para Vistoria[]
+          const mappedVistorias: Vistoria[] = (inspectionsResponse.data || []).map((inspection: any) => ({
+            id: inspection.id,
+            empresa_id: inspection.company_id || '',
+            imovel_id: inspection.property_id,
+            vistoriador_id: inspection.user_id,
+            tipo: inspection.data?.tipo || 'entrada',
+            status: inspection.status === 'completed' ? 'finalizada' : 'rascunho',
+            pdf_url: inspection.data?.pdf_url,
+            created_at: inspection.created_at,
+            updated_at: inspection.updated_at,
+            // Propriedades adicionais para compatibilidade
+            cliente: inspection.data?.cliente,
+            endereco: inspection.data?.endereco,
+            tipo_vistoria: inspection.data?.tipo_vistoria,
+            observacoes: inspection.data?.observacoes,
+            imovel: inspection.data?.imovel,
+            ambientes: inspection.data?.ambientes
+          }));
+          setVistorias(mappedVistorias);
+          return;
+        }
+      }
+      
+      // Fallback para Supabase (compatibilidade)
       const currentUser = await SupabaseService.getCurrentUser();
       
       if (!currentUser) {
@@ -185,9 +214,9 @@ export default function VistoriasScreen() {
         <View style={styles.vistoriaInfo}>
           <Text style={styles.vistoriaCode}>{item.imovel?.codigo || item.id}</Text>
           <ModernCard 
-            style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status || 'rascunho') + '15' }]}
+            style={StyleSheet.flatten([styles.statusBadge, { backgroundColor: getStatusColor(item.status || 'rascunho') + '15' }])}
             variant="glass"
-            padding="sm"
+            padding="small"
           >
             <Text style={[styles.statusText, { color: getStatusColor(item.status || 'rascunho') }]}>
               {getStatusLabel(item.status || 'rascunho')}
@@ -197,8 +226,8 @@ export default function VistoriasScreen() {
         <ModernCard 
           style={styles.vistoriaType}
           variant="gradient"
-          gradientColors={colors.gradients.accent}
-          padding="sm"
+          gradientColors={[...colors.gradients.accent]}
+          padding="small"
         >
           <Text style={styles.vistoriaTypeText}>{getTipoLabel(item.tipo)}</Text>
         </ModernCard>
@@ -219,7 +248,7 @@ export default function VistoriasScreen() {
           <View style={styles.detailRow}>
             <FileText size={18} color={colors.accent} />
             <Text style={styles.detailText}>
-              {item.ambientes.length} ambiente(s)
+              {item.ambientes?.length || 0} ambiente(s)
             </Text>
           </View>
         )}
@@ -276,16 +305,20 @@ export default function VistoriasScreen() {
         <View style={styles.detailRow}>
           <FileText size={16} color={colors.textMuted} />
           <Text style={styles.detailText}>
-            {item.ambientes.length} ambiente(s)
+            {item.ambientes?.length || 0} ambiente(s)
           </Text>
         </View>
       </View>
 
       <View style={styles.vistoriaActions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <Eye size={16} color={colors.primary} />
-          <Text style={styles.actionText}>Continuar Edição</Text>
-        </TouchableOpacity>
+        <ModernButton
+          title="Continuar Edição"
+          variant="outline"
+          size="sm"
+          icon={<Eye size={16} color={colors.primary} />}
+          onPress={() => router.push(`/wizard?draftId=${item.id}`)}
+          style={styles.actionButton}
+        />
       </View>
     </ModernCard>
   );
@@ -320,7 +353,7 @@ export default function VistoriasScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ModernCard style={styles.header} variant="glass" padding="lg">
+      <ModernCard style={styles.header} variant="glass" padding="large">
         <Text style={styles.title}>Vistorias</Text>
       </ModernCard>
 
@@ -368,7 +401,7 @@ export default function VistoriasScreen() {
           ))}
           
           {filteredDrafts.length === 0 && filteredVistorias.length === 0 && (
-            <ModernCard style={styles.emptyCard} variant="glass" padding="xxl">
+            <ModernCard style={styles.emptyCard} variant="glass" padding="large">
               <FileText size={64} color={colors.accent} />
               <Text style={styles.emptyTitle}>Nenhuma vistoria encontrada</Text>
               <Text style={styles.emptySubtitle}>

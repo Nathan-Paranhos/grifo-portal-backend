@@ -1,21 +1,51 @@
-"use client";
+'use client';
 
-import { ReactNode, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import MobileNav from "../../components/layout/MobileNav";
-import grifoPortalApiService from "@/lib/api";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import grifoPortalApiService from '@/lib/api';
+import MobileNav from '@/components/layout/MobileNav';
+import NotificationCenter from '@/components/NotificationCenter';
 
-export default function ProtectedLayout({ children }: { children: ReactNode }) {
+// Modo de demonstração
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = grifoPortalApiService.isAuthenticated();
-      setIsAuthenticated(authenticated);
-      
-      if (!authenticated) {
-        router.push('/login');
+    // Se estiver em modo demo, pula a verificação de autenticação
+    if (DEMO_MODE) {
+      setIsAuthenticated(true);
+      return;
+    }
+
+    const checkAuth = async () => {
+      try {
+        // Primeiro verifica se há token no localStorage
+        const token = localStorage.getItem('grifo_token');
+        if (!token) {
+          setIsAuthenticated(false);
+          router.replace('/login');
+          return;
+        }
+
+        // Depois verifica com a API se o token é válido
+        const isValid = await grifoPortalApiService.verifyAuthentication();
+        if (!isValid) {
+          setIsAuthenticated(false);
+          router.replace('/login');
+          return;
+        }
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        // Log apenas em desenvolvimento
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Auth verification failed:', error instanceof Error ? error.message : error);
+        }
+        setIsAuthenticated(false);
+        router.replace('/login');
       }
     };
 
@@ -25,18 +55,24 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
   // Mostrar loading enquanto verifica autenticação
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando autenticação...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticação...</p>
         </div>
       </div>
     );
   }
 
-  // Se não autenticado, não renderizar nada (redirecionamento já foi feito)
+  // Se não autenticado, não renderiza nada (redirecionamento já foi feito)
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecionando para login...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -44,8 +80,8 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex md:flex-col border-r border-border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 sticky top-0 min-h-screen">
         {/* Brand */}
         <div className="px-4 py-4 flex items-center gap-2 border-b border-border">
-          <div className="h-8 w-8 rounded-md bg-primary/10 border border-primary/30 grid place-items-center text-primary">
-            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 4.5L20 8l-4 3 1 5-5-2.5L7 16l1-5-4-3 5.5-1.5L12 2z"/></svg>
+          <div className="h-8 w-8 rounded-md bg-primary/10 border border-primary/30 grid place-items-center">
+            <img src="/grifo-logo.svg" alt="Grifo Logo" className="h-6 w-6" />
           </div>
           <div>
             <div className="text-sm font-semibold tracking-tight">Grifo</div>
@@ -72,6 +108,10 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v2H4V4zm0 6h16v2H4v-2zm0 6h10v2H4v-2z"/></svg>
             <span>Vistorias</span>
           </a>
+          <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/30" href="/solicitacoes" aria-label="Solicitações">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Solicitações</span>
+          </a>
           <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/30" href="/imoveis" aria-label="Imóveis">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9H6v-9H3l9-8z"/></svg>
             <span>Imóveis</span>
@@ -79,11 +119,14 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/30" href="/contestoes" aria-label="Contestações">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 6h-8l-2-2H3v16h18V6zm-3 10H6v-2h12v2zm0-4H6V10h12v2z"/></svg>
             <span className="flex-1">Contestações</span>
-            <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary/15 text-primary border border-primary/30 px-1 text-[10px]">2</span>
           </a>
 
           {/* Section: Administração */}
           <div className="px-2 pt-4 pb-2 text-[11px] uppercase tracking-wide text-muted-foreground/80">Administração</div>
+          <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/30" href="/clientes" aria-label="Clientes">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+            <span>Clientes</span>
+          </a>
           <a className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/30" href="/usuarios" aria-label="Usuários">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A6.49 6.49 0 0121 17.5V19h-6v-2.5c0-.57-.1-1.1-.28-1.58.41-.06.86-.1 1.28-.1z"/></svg>
             <span>Usuários</span>
@@ -104,6 +147,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
             <span>Sessão desativada</span>
             <span className="text-muted-foreground/70">v0.1</span>
           </div>
+          <div className="mt-2 text-center text-[10px] text-muted-foreground/60">
+            Developer by Nathan Silva
+          </div>
         </div>
       </aside>
       <main className="bg-background">
@@ -111,8 +157,8 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2 p-3 md:p-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:pt-4">
             {/* Left cluster: brand + divider */}
             <a href="/dashboard" className="flex items-center gap-2" aria-label="Ir para dashboard">
-              <span className="inline-grid h-8 w-8 place-items-center rounded-md bg-primary/10 border border-primary/30 text-primary">
-                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 4.5L20 8l-4 3 1 5-5-2.5L7 16l1-5-4-3 5.5-1.5L12 2z"/></svg>
+              <span className="inline-grid h-8 w-8 place-items-center rounded-md bg-primary/10 border border-primary/30">
+                <img src="/grifo-logo.svg" alt="Grifo Logo" className="h-5 w-5" />
               </span>
               <div className="leading-tight">
                 <div className="font-semibold tracking-tight">Grifo</div>
@@ -150,10 +196,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                 <button className="h-9 w-9 rounded-md hover:bg-muted/30 grid place-items-center" aria-label="Alternar tema">
                   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 100 18 7 7 0 010-18z"/></svg>
                 </button>
-                <button className="relative h-9 w-9 rounded-md hover:bg-muted/30 grid place-items-center" aria-label="Notificações">
-                  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z"/></svg>
-                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] rounded-full bg-primary text-primary-foreground text-[10px] leading-4 px-1 text-center">3</span>
-                </button>
+                <NotificationCenter />
                 <div className="relative">
                   <button className="h-9 w-9 sm:w-auto sm:pl-2 sm:pr-3 rounded-md hover:bg-muted/30 flex items-center gap-2" aria-haspopup="menu" aria-expanded="false" aria-label="Abrir menu do usuário">
                     <span className="inline-grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-primary/20 to-primary/40 text-primary border border-primary/30 text-[10px] font-semibold">PG</span>
@@ -163,8 +206,18 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
               </div>
               <button 
                 onClick={async () => {
-                  await grifoPortalApiService.logout();
-                  router.push('/login');
+                  try {
+                    await grifoPortalApiService.logout();
+                    // Usar replace para evitar problemas de navegação
+                    router.replace('/login');
+                  } catch (error) {
+                    // Log apenas em desenvolvimento
+                    if (process.env.NODE_ENV === 'development') {
+                      console.error('Logout error:', error instanceof Error ? error.message : error);
+                    }
+                    // Mesmo com erro, redireciona para login
+                    router.replace('/login');
+                  }
                 }}
                 className="hidden sm:inline-flex h-9 px-3 rounded-md bg-destructive text-destructive-foreground hover:opacity-90" 
                 aria-label="Fazer logout"

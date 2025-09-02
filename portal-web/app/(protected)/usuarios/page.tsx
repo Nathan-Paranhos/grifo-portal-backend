@@ -4,7 +4,7 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
-import { supabase } from "../../../lib/supabase";
+import grifoPortalApiService, { User } from "../../../lib/api";
 
 type UserRole = "admin" | "gestor" | "corretor" | "vistoriador";
 type UserStatus = "ativo" | "inativo";
@@ -17,27 +17,28 @@ type Usuario = {
   criado_em: string; // ISO
 };
 
-// Função para buscar usuários do Supabase
+// Função para buscar usuários da API
 async function fetchUsuarios(): Promise<Usuario[]> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const response = await grifoPortalApiService.getUsers();
      
-     if (error) {
+     if (!response.success || !response.data) {
        return [];
      }
     
-    return data?.map(user => ({
-      id: user.id,
-      nome: user.name || user.email,
-      email: user.email,
-      role: user.role || 'corretor',
-      status: user.active ? 'ativo' : 'inativo',
-      criado_em: user.created_at
-    })) || [];
+    return response.data.map(user => ({
+      id: user.id || '',
+      nome: user.name || user.email || '',
+      email: user.email || '',
+      role: (user.role as UserRole) || 'corretor',
+      status: 'ativo' as UserStatus, // Assumindo que usuários retornados estão ativos
+      criado_em: user.created_at || new Date().toISOString()
+    }));
   } catch (error) {
+    // Log apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to fetch users:', error instanceof Error ? error.message : error);
+    }
     return [];
   }
 }

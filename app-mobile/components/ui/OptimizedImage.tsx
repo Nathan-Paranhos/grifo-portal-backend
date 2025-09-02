@@ -151,7 +151,7 @@ export function OptimizedImage({
   if (!inView) {
     return (
       <View ref={viewRef} style={[styles.container, containerStyle]}>
-        {placeholder || <View style={[styles.placeholder, style]} />}
+        {placeholder || <View style={[styles.placeholder, style as ViewStyle]} />}
       </View>
     );
   }
@@ -159,7 +159,7 @@ export function OptimizedImage({
   if (error) {
     return (
       <View style={[styles.container, styles.errorContainer, containerStyle]}>
-        <View style={[styles.errorPlaceholder, style]} />
+        <View style={[styles.errorPlaceholder, style as ViewStyle]} />
       </View>
     );
   }
@@ -167,7 +167,7 @@ export function OptimizedImage({
   return (
     <View ref={viewRef} style={[styles.container, containerStyle]}>
       {loading && (
-        <View style={[styles.loadingContainer, style]}>
+        <View style={[styles.loadingContainer, style as ViewStyle]}>
           <ActivityIndicator size="small" color={colors.primary} />
         </View>
       )}

@@ -1,165 +1,146 @@
 "use client";
-import Link from "next/link";
-import { StatusBadge } from "../../../components/ui/StatusBadge";
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
-import { supabase } from "../../../lib/supabase";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
+import grifoPortalApiService from "../../../lib/api";
 
-type ContStatus = "aberta" | "em_analise" | "aceita" | "rejeitada";
-type Contestacao = {
+type ContestStatus = "pendente" | "em_analise" | "resolvida" | "rejeitada";
+type ContestItem = {
   id: string;
-  protocolo: string;
-  vistoriaId: string;
+  vistoria_id: string;
   imovel: string;
-  autor: string;
-  status: ContStatus;
-  criada_em: string; // ISO
+  endereco: string;
+  tipo: string;
+  prioridade: "low" | "medium" | "high";
+  data_criacao: string;
+  status: ContestStatus;
+  nome_contestante: string;
+  email_contestante: string;
 };
 
+// Mock data para demonstração
+const mockContestacoes: ContestItem[] = [
+  {
+    id: "1",
+    vistoria_id: "v001",
+    imovel: "Apartamento Centro",
+    endereco: "Rua das Flores, 123 - Centro",
+    tipo: "structural",
+    prioridade: "high",
+    data_criacao: new Date().toISOString(),
+    status: "pendente",
+    nome_contestante: "João Silva",
+    email_contestante: "joao@email.com"
+  },
+  {
+    id: "2",
+    vistoria_id: "v002",
+    imovel: "Casa Jardim América",
+    endereco: "Av. Brasil, 456 - Jardim América",
+    tipo: "electrical",
+    prioridade: "medium",
+    data_criacao: new Date(Date.now() - 86400000).toISOString(),
+    status: "em_analise",
+    nome_contestante: "Maria Santos",
+    email_contestante: "maria@email.com"
+  }
+];
 
-
-export default function ContestoesPage() {
+export default function ContestacoesPage() {
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<"todos" | ContStatus>("todos");
+  const [status, setStatus] = useState<"todos" | ContestStatus>("todos");
   const [page, setPage] = useState(1);
-  const [items, setItems] = useState<Contestacao[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [contestacoes, setContestacoes] = useState<ContestItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toDelete, setToDelete] = useState<Contestacao | null>(null);
-  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const pageSize = 10;
 
-  // Carregar contestações do Supabase
+  // Carregar contestações
   useEffect(() => {
-    async function fetchContestacoes() {
+    async function loadContestacoes() {
       setLoading(true);
-      try {
-        const { data: contestacoes, error } = await supabase
-          .from('contestacoes')
-          .select(`
-            id,
-            protocolo,
-            vistoria_id,
-            status,
-            created_at,
-            vistorias(
-              id,
-              imoveis(
-                endereco
-              )
-            ),
-            profiles(
-              nome
-            )
-          `)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          return;
-        }
-
-        const contestacoesFormatadas: Contestacao[] = contestacoes?.map(c => ({
-          id: c.id.toString(),
-          protocolo: c.protocolo || `CT-${c.id}`,
-          vistoriaId: c.vistoria_id?.toString() || '',
-          imovel: (c.vistorias as any)?.imoveis?.endereco || 'Endereço não informado',
-          autor: (c.profiles as any)?.nome || 'Autor não informado',
-          status: c.status as ContStatus,
-          criada_em: c.created_at
-        })) || [];
-
-        setItems(contestacoesFormatadas);
-      } catch (error) {
-      }
-      setLoading(false);
+      // TODO: Implementar busca real da API
+      // Por enquanto usando dados mock
+      setTimeout(() => {
+        setContestacoes(mockContestacoes);
+        setLoading(false);
+      }, 500);
     }
-
-    fetchContestacoes();
+    loadContestacoes();
   }, []);
 
   const filtered = useMemo(() => {
-    return items.filter((c) => {
-      const q = `${c.protocolo} ${c.imovel} ${c.autor}`.toLowerCase();
-      const matchesQ = q.includes(query.toLowerCase());
+    return contestacoes.filter((c) => {
+      const matchesQuery = `${c.imovel} ${c.endereco} ${c.nome_contestante} ${c.email_contestante}`
+        .toLowerCase()
+        .includes(query.toLowerCase());
       const matchesStatus = status === "todos" ? true : c.status === status;
-      return matchesQ && matchesStatus;
+      return matchesQuery && matchesStatus;
     });
-  }, [items, query, status]);
+  }, [contestacoes, query, status]);
 
   const total = filtered.length;
-  const kpiAbertas = useMemo(() => filtered.filter((c) => c.status === "aberta").length, [filtered]);
+  const kpiPendentes = useMemo(() => filtered.filter((c) => c.status === "pendente").length, [filtered]);
   const kpiAnalise = useMemo(() => filtered.filter((c) => c.status === "em_analise").length, [filtered]);
+  const kpiResolvidas = useMemo(() => filtered.filter((c) => c.status === "resolvida").length, [filtered]);
   const kpiRejeitadas = useMemo(() => filtered.filter((c) => c.status === "rejeitada").length, [filtered]);
+  
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageIds = useMemo(() => pageItems.map((c) => c.id), [pageItems]);
+  const allChecked = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
 
-  function statusBadge(s: ContStatus) {
-    const tone: Record<ContStatus, "amber" | "blue" | "emerald" | "rose"> = {
-      aberta: "amber",
-      em_analise: "blue",
-      aceita: "emerald",
-      rejeitada: "rose",
-    };
-    const icon: Record<ContStatus, JSX.Element> = {
-      aberta: (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20Zm1-7V7h-2v8h2Zm0 4v-2h-2v2h2Z" />
-        </svg>
-      ),
-      em_analise: (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M10 3a7 7 0 1 1 5.29 11.6l4.56 4.55-1.42 1.42-4.55-4.56A7 7 0 0 1 10 3Zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z" />
-        </svg>
-      ),
-      aceita: (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-        </svg>
-      ),
-      rejeitada: (
-        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59Z" />
-        </svg>
-      ),
-    };
-    return (
-      <StatusBadge tone={tone[s]} leftIcon={icon[s]}>
-        {s.replace("_", " ")}
-      </StatusBadge>
-    );
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   }
-
-  function askRemove(c: Contestacao) {
-    setToDelete(c);
-  }
-  async function confirmRemove() {
-    if (!toDelete) return;
-    
-    try {
-      const { error } = await supabase
-        .from('contestacoes')
-        .delete()
-        .eq('id', toDelete.id);
-
-      if (error) {
-        setToast({ message: "Erro ao excluir contestação", tone: "error" });
-        return;
+  
+  function toggleAllOnPage() {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allChecked) {
+        pageIds.forEach((id) => next.delete(id));
+      } else {
+        pageIds.forEach((id) => next.add(id));
       }
+      return next;
+    });
+  }
 
-      setItems((prev) => prev.filter((p) => p.id !== toDelete.id));
-      setToDelete(null);
-      setToast({ message: "Contestação excluída", tone: "success" });
-    } catch (error) {
-      setToast({ message: "Erro ao excluir contestação", tone: "error" });
+  const getStatusTone = (status: ContestStatus): "amber" | "blue" | "emerald" | "rose" | "zinc" => {
+    switch (status) {
+      case "pendente": return "amber";
+      case "em_analise": return "blue";
+      case "resolvida": return "emerald";
+      case "rejeitada": return "rose";
+      default: return "zinc";
     }
-    
-    setTimeout(() => setToast(null), 2000);
-  }
-  function cancelRemove() {
-    setToDelete(null);
-  }
+  };
+
+  const getPriorityTone = (priority: "low" | "medium" | "high"): "amber" | "blue" | "emerald" | "rose" | "zinc" => {
+    switch (priority) {
+      case "low": return "emerald";
+      case "medium": return "amber";
+      case "high": return "rose";
+      default: return "zinc";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="space-y-6 overflow-x-hidden">
@@ -176,121 +157,167 @@ export default function ContestoesPage() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold">Contestações</h1>
-          <p className="text-sm text-muted-foreground">{loading ? 'Carregando...' : 'Lista com filtros e paginação'}</p>
+          <p className="text-sm text-muted-foreground">Gestão de contestações de laudos</p>
         </div>
-        <Tooltip content="Ver guia de políticas">
-          <a href="#" className="h-9 rounded-md border border-border px-3 text-sm hover:bg-muted/30">Guia</a>
-        </Tooltip>
       </div>
 
       {/* KPIs */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard label="Abertas" value={kpiAbertas} color="#f59e0b" />
-        <KpiCard label="Em análise" value={kpiAnalise} color="#3b82f6" />
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <KpiCard label="Pendentes" value={kpiPendentes} color="#f59e0b" />
+        <KpiCard label="Em Análise" value={kpiAnalise} color="#3b82f6" />
+        <KpiCard label="Resolvidas" value={kpiResolvidas} color="#10b981" />
         <KpiCard label="Rejeitadas" value={kpiRejeitadas} color="#ef4444" />
       </section>
 
       {/* Filtros */}
       <SectionCard title="Filtros" subtitle={`${total} resultados`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <input
-            placeholder="Buscar por protocolo, imóvel ou autor"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-            className="h-9 px-3 rounded-md border border-input bg-background"
-          />
-          <select
-            value={status}
-            onChange={(e) => { setStatus(e.target.value as any); setPage(1); }}
-            className="h-9 px-2 rounded-md border border-input bg-background"
-          >
-            <option value="todos">Todos status</option>
-            <option value="aberta">Aberta</option>
-            <option value="em_analise">Em análise</option>
-            <option value="aceita">Aceita</option>
-            <option value="rejeitada">Rejeitada</option>
-          </select>
-          <div className="flex items-center justify-end text-sm text-muted-foreground">{total} resultados</div>
+          <div className="col-span-1 md:col-span-2 flex gap-2">
+            <input
+              placeholder="Buscar por imóvel, endereço ou contestante"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              className="flex-1 h-9 px-3 rounded-md border border-input bg-background"
+            />
+            <select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value as any);
+                setPage(1);
+              }}
+              className="h-9 px-2 rounded-md border border-input bg-background"
+            >
+              <option value="todos">Todos status</option>
+              <option value="pendente">Pendente</option>
+              <option value="em_analise">Em Análise</option>
+              <option value="resolvida">Resolvida</option>
+              <option value="rejeitada">Rejeitada</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-sm text-muted-foreground">{total} resultados</span>
+          </div>
         </div>
-        {/* Quick chips status */}
+        {/* Quick chips */}
         <div className="mt-3 flex flex-wrap gap-2 text-xs" aria-label="Filtros rápidos por status">
           <button className={`px-2 py-1 rounded-md border ${status === "todos" ? "bg-muted/30" : "hover:bg-muted/20"}`} onClick={() => { setStatus("todos"); setPage(1); }}>Todos</button>
-          <button className={`px-2 py-1 rounded-md border ${status === "aberta" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("aberta"); setPage(1); }}>Abertas</button>
-          <button className={`px-2 py-1 rounded-md border ${status === "em_analise" ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("em_analise"); setPage(1); }}>Em análise</button>
-          <button className={`px-2 py-1 rounded-md border ${status === "aceita" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("aceita"); setPage(1); }}>Aceitas</button>
+          <button className={`px-2 py-1 rounded-md border ${status === "pendente" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("pendente"); setPage(1); }}>Pendentes</button>
+          <button className={`px-2 py-1 rounded-md border ${status === "em_analise" ? "bg-blue-500/15 border-blue-500/30 text-blue-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("em_analise"); setPage(1); }}>Em Análise</button>
+          <button className={`px-2 py-1 rounded-md border ${status === "resolvida" ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("resolvida"); setPage(1); }}>Resolvidas</button>
           <button className={`px-2 py-1 rounded-md border ${status === "rejeitada" ? "bg-rose-500/15 border-rose-500/30 text-rose-300" : "hover:bg-muted/20"}`} onClick={() => { setStatus("rejeitada"); setPage(1); }}>Rejeitadas</button>
         </div>
       </SectionCard>
 
       {/* Lista */}
-      <SectionCard title="Lista de contestações" subtitle={loading ? "Carregando..." : "Dados reais"}>
-        {/* Mobile cards */}
-        <div className="md:hidden space-y-2">
-          {pageItems.length === 0 ? (
-            <div className="px-3 py-10 text-center text-sm text-muted-foreground" aria-live="polite">
-              Nenhum registro encontrado com os filtros atuais.
-            </div>
-          ) : (
-            pageItems.map((c) => (
-              <div key={c.id} className="rounded-lg border border-border bg-card p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[11px] font-mono text-muted-foreground">{c.protocolo}</div>
-                    <div className="mt-1 text-sm font-medium leading-5">{c.imovel}</div>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Link href={`/contestoes/${c.id}`} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30 inline-block" aria-label={`Abrir contestação ${c.protocolo}`}>Abrir</Link>
-                    <button onClick={() => askRemove(c)} className="px-2 py-1.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" aria-label={`Excluir contestação ${c.protocolo}`}>Excluir</button>
-                  </div>
-                </div>
-                <div className="mt-2 grid grid-cols-1 gap-1 text-xs text-muted-foreground">
-                  <div><span className="sr-only">Autor:</span>{c.autor}</div>
-                  <div className="mt-1"><span className="sr-only">Status:</span>{statusBadge(c.status)}</div>
-                </div>
-              </div>
-            ))
-          )}
+      <SectionCard title="Lista de contestações" subtitle={loading ? "Carregando..." : `${total} contestações`}>
+        {/* Bulk actions toolbar */}
+        <div className="mb-2 flex items-center justify-between text-sm">
+          <div className="text-muted-foreground">{selected.size} selecionada(s)</div>
+          <div className="flex gap-2">
+            <button 
+              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              disabled={selected.size === 0} 
+              onClick={() => {
+                if (selected.size > 0) {
+                  const selectedIds = Array.from(selected);
+                  alert(`Exportando ${selectedIds.length} contestações selecionadas`);
+                }
+              }}
+            >
+              Exportar seleção
+            </button>
+          </div>
         </div>
 
-        {/* Desktop table */}
-        <div className="hidden md:block overflow-auto rounded-lg border border-border">
-          <table className="min-w-full text-sm">
-            <thead className="sticky top-0 z-10 border-b bg-card/95 text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-card/70">
-              <tr>
-                <th scope="col" className="text-left font-medium px-3 py-2.5">
-                  <Tooltip content="Número de protocolo"><span>Protocolo</span></Tooltip>
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-2 pr-2 w-8">
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    onChange={toggleAllOnPage}
+                    className="rounded border-border"
+                    aria-label="Selecionar todas as contestações da página"
+                  />
                 </th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5">
-                  <Tooltip content="Imóvel relacionado"><span>Imóvel</span></Tooltip>
-                </th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5">
-                  <Tooltip content="Quem abriu a contestação"><span>Autor</span></Tooltip>
-                </th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5">
-                  <Tooltip content="Situação atual"><span>Status</span></Tooltip>
-                </th>
-                <th scope="col" className="px-3 py-2.5"></th>
+                <th className="text-left py-2 px-2">Imóvel</th>
+                <th className="text-left py-2 px-2">Contestante</th>
+                <th className="text-left py-2 px-2">Tipo</th>
+                <th className="text-left py-2 px-2">Prioridade</th>
+                <th className="text-left py-2 px-2">Status</th>
+                <th className="text-left py-2 px-2">Data</th>
+                <th className="text-left py-2 pl-2">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {pageItems.length === 0 ? (
+              {loading ? (
                 <tr>
-                  <td className="px-3 py-10 text-center text-sm text-muted-foreground" colSpan={5} aria-live="polite">
-                    Nenhum registro encontrado com os filtros atuais.
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Carregando contestações...
+                    </div>
+                  </td>
+                </tr>
+              ) : pageItems.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    Nenhuma contestação encontrada
                   </td>
                 </tr>
               ) : (
                 pageItems.map((c) => (
-                  <tr key={c.id} className="border-b border-border/60 odd:bg-background even:bg-muted/5 hover:bg-muted/20">
-                    <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{c.protocolo}</td>
-                    <td className="px-3 py-2">{c.imovel}</td>
-                    <td className="px-3 py-2">{c.autor}</td>
-                    <td className="px-3 py-2">{statusBadge(c.status)}</td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/contestoes/${c.id}`} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30 inline-block" aria-label={`Abrir contestação ${c.protocolo}`}>Abrir</Link>
-                        <button onClick={() => askRemove(c)} className="px-2 py-1.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" aria-label={`Excluir contestação ${c.protocolo}`}>Excluir</button>
+                  <tr key={c.id} className="border-b border-border hover:bg-muted/20">
+                    <td className="py-2 pr-2">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(c.id)}
+                        onChange={() => toggleOne(c.id)}
+                        className="rounded border-border"
+                        aria-label={`Selecionar contestação ${c.id}`}
+                      />
+                    </td>
+                    <td className="py-2 px-2">
+                      <div>
+                        <div className="font-medium">{c.imovel}</div>
+                        <div className="text-xs text-muted-foreground">{c.endereco}</div>
                       </div>
+                    </td>
+                    <td className="py-2 px-2">
+                      <div>
+                        <div className="font-medium">{c.nome_contestante}</div>
+                        <div className="text-xs text-muted-foreground">{c.email_contestante}</div>
+                      </div>
+                    </td>
+                    <td className="py-2 px-2">
+                      <span className="capitalize">{c.tipo}</span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <StatusBadge tone={getPriorityTone(c.prioridade)}>
+                        {c.prioridade}
+                      </StatusBadge>
+                    </td>
+                    <td className="py-2 px-2">
+                      <StatusBadge tone={getStatusTone(c.status)}>
+                        {c.status.replace('_', ' ')}
+                      </StatusBadge>
+                    </td>
+                    <td className="py-2 px-2 text-xs text-muted-foreground">
+                      {formatDate(c.data_criacao)}
+                    </td>
+                    <td className="py-2 pl-2">
+                      <a
+                        href={`/contestoes/${c.id}`}
+                        className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30"
+                      >
+                        Ver detalhes
+                      </a>
                     </td>
                   </tr>
                 ))
@@ -298,34 +325,32 @@ export default function ContestoesPage() {
             </tbody>
           </table>
         </div>
-        {/* Paginação */}
-        <div className="mt-3 flex items-center justify-between gap-4">
-          <div className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</div>
-          <div className="flex gap-2">
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
-          </div>
-        </div>
-      </SectionCard>
 
-      {toDelete && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={cancelRemove} role="dialog" aria-modal="true" aria-labelledby="dialog-contestoes-remove-title">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
-            <h3 id="dialog-contestoes-remove-title" className="text-lg font-medium mb-2">Confirmar exclusão</h3>
-            <p className="text-sm text-muted-foreground mb-4">Tem certeza que deseja excluir &quot;{toDelete.protocolo}&quot;?</p>
-            <div className="flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={cancelRemove}>Cancelar</button>
-              <button className="px-3 py-2 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" onClick={confirmRemove}>Excluir</button>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <div className="text-muted-foreground">
+              Página {currentPage} de {totalPages} ({total} total)
+            </div>
+            <div className="flex gap-1">
+              <button
+                className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(Math.max(1, currentPage - 1))}
+              >
+                Anterior
+              </button>
+              <button
+                className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+              >
+                Próxima
+              </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {toast && (
-        <div className={`fixed right-4 top-4 z-50 rounded-md px-3 py-2 text-sm shadow-md border ${toast.tone === "success" ? "bg-emerald-600 text-white border-emerald-500" : "bg-rose-600 text-white border-rose-500"}`}>
-          {toast.message}
-        </div>
-      )}
+        )}
+      </SectionCard>
     </div>
   );
 }

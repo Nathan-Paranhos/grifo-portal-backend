@@ -6,7 +6,9 @@
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "NEXT_PUBLIC_GRIFO_API_URL": "@grifo_api_url",
+    "NEXT_PUBLIC_GRIFO_API_URL": "@grifo-api-url",
+    "NEXT_PUBLIC_API_URL": "@grifo-api-url",
+    "NEXT_PUBLIC_GRIFO_API_BASE_URL": "@grifo-api-base-url",
     "NODE_ENV": "production"
   },
   "functions": {

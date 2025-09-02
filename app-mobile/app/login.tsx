@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { SupabaseService } from '@/services/supabase';
@@ -17,7 +17,7 @@ interface LoginScreenProps {
   skipAuthCheck?: boolean;
 }
 
-export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps = {}) {
+export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -28,37 +28,36 @@ export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps 
   const [initialLoading, setInitialLoading] = useState(!skipAuthCheck);
   const { toast, showSuccess, showError, hideToast } = useToast();
 
+  // Verificar modo de demonstração
+  const DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+
   useEffect(() => {
+    // Se estiver em modo demo, ir direto para o dashboard
+    if (DEMO_MODE) {
+      // Usar setTimeout para garantir que o componente seja montado antes da navegação
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 100);
+      return;
+    }
+    
     if (!skipAuthCheck) {
       checkAuthStatus();
     }
-  }, [skipAuthCheck]);
+  }, [skipAuthCheck, DEMO_MODE]);
 
   const checkAuthStatus = async () => {
     try {
-      // Verificar se há token da API Grifo
-      if (grifoApiService.isAuthenticated()) {
-        // Verificar se o token ainda é válido
-        const userResponse = await grifoApiService.getCurrentUser();
-        if (userResponse.success) {
-          // User already authenticated
-          router.replace('/(tabs)');
-          return;
-        } else {
-          // Token inválido, limpar e continuar na tela de login
-          await grifoApiService.logout();
-        }
-      }
+      // Verificar apenas Supabase Auth - sem fallback agressivo
+      const data = await SupabaseService.getSession();
       
-      // Fallback para Supabase (compatibilidade)
-      const user = await SupabaseService.getCurrentUser();
-      if (user) {
+      // Verificação mais robusta para evitar erro de propriedade undefined
+      if (data && data.session && data.session.user) {
+        // Usuário autenticado no Supabase, redirecionar
         router.replace('/(tabs)');
       }
     } catch (error) {
-      // Auth check error handled silently
-      // Em caso de erro, limpar autenticação
-      await grifoApiService.logout();
+      console.warn('Erro na verificação de autenticação:', error);
     } finally {
       setInitialLoading(false);
     }
@@ -105,20 +104,17 @@ export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps 
       if (isSignUp) {
         // Registrar na API Grifo
         const response = await grifoApiService.register({
+          name: name.trim(),
           email: email.trim().toLowerCase(),
           password,
-          name: name.trim(),
           phone: phone?.trim() || undefined,
         });
 
         if (response.success) {
           showSuccess('Conta criada com sucesso!');
           setTimeout(() => {
-            setIsSignUp(false);
-            setName('');
-            setPhone('');
-            setPassword(''); // Limpar senha por segurança
-          }, 1500);
+            router.replace('/(tabs)');
+          }, 1000);
         } else {
           showError(response.error || 'Erro ao criar conta');
         }
@@ -127,16 +123,10 @@ export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps 
         const response = await grifoApiService.login(email.trim().toLowerCase(), password);
         
         if (response.success) {
-          // Verificar se o usuário foi autenticado corretamente
-          const userResponse = await grifoApiService.getCurrentUser();
-          if (userResponse.success) {
-            showSuccess('Login realizado com sucesso!');
-            setTimeout(() => {
-              router.replace('/(tabs)');
-            }, 1000);
-          } else {
-            showError('Falha na verificação do usuário');
-          }
+          showSuccess('Login realizado com sucesso!');
+          setTimeout(() => {
+            router.replace('/(tabs)');
+          }, 1000);
         } else {
           showError(response.error || 'Credenciais inválidas');
         }
@@ -191,8 +181,15 @@ export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps 
       >
         <View style={styles.content}>
           {/* Logo/Header */}
-          <ModernCard style={styles.header} variant="elevated" padding="xl">
-            <Text style={styles.title}>Grifo App</Text>
+          <ModernCard style={styles.header} variant="elevated" padding="large">
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../assets/images/icon.png')} 
+                style={styles.logo} 
+                resizeMode="contain"
+              />
+              <Text style={styles.title}>Grifo App</Text>
+            </View>
             <Text style={styles.subtitle}>
               {isSignUp ? 'Criar nova conta' : 'Faça login para continuar'}
             </Text>
@@ -282,6 +279,11 @@ export default function LoginScreen({ skipAuthCheck = false }: LoginScreenProps 
               </TouchableOpacity>
             </View>
           </ModernCard>
+          
+          {/* Developer Credits */}
+          <View style={styles.credits}>
+            <Text style={styles.creditsText}>Developer by Nathan Silva</Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
       
@@ -302,6 +304,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
   keyboardView: {
     flex: 1,
   },
@@ -314,11 +322,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: spacing.md,
+  },
   title: {
     fontSize: typography.size.huge,
     fontFamily: typography.fontFamily.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: typography.size.lg,
@@ -356,5 +373,16 @@ const styles = StyleSheet.create({
   switchModeLink: {
     color: colors.primary,
     fontFamily: typography.fontFamily.medium,
+  },
+  credits: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    paddingBottom: spacing.lg,
+  },
+  creditsText: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    opacity: 0.7,
   },
 });

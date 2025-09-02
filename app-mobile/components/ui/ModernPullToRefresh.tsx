@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     backgroundColor: `${colors.surface}F0`,
-    borderRadius: spacing.borderRadius * 2,
+    borderRadius: spacing.borderRadius.lg * 2,
     shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   gradientIndicator: {
     alignItems: 'center',
     padding: spacing.md,
-    borderRadius: spacing.borderRadius * 2,
+    borderRadius: spacing.borderRadius.lg * 2,
     shadowColor: colors.shadow,
     shadowOffset: {
       width: 0,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     padding: spacing.sm,
     backgroundColor: `${colors.accent}20`,
-    borderRadius: spacing.borderRadius,
+    borderRadius: spacing.borderRadius.sm,
   },
   textContainer: {
     alignItems: 'center',

@@ -201,7 +201,7 @@ export function ModernModal({
 
         <Animated.View style={getModalStyle()}>
           <LinearGradient
-            colors={[colors.surface, `${colors.surface}F0`]}
+            colors={[colors.surface, colors.surfaceVariant, colors.surface]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradient}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   defaultModal: {
     width: screenWidth - spacing.xl * 2,
     maxHeight: screenHeight * 0.8,
-    borderRadius: spacing.borderRadius * 2,
+    borderRadius: spacing.borderRadius.lg * 2,
     overflow: 'hidden',
   },
   fullscreenModal: {
@@ -278,8 +278,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     maxHeight: screenHeight * 0.9,
-    borderTopLeftRadius: spacing.borderRadius * 2,
-    borderTopRightRadius: spacing.borderRadius * 2,
+    borderTopLeftRadius: spacing.borderRadius.lg * 2,
+    borderTopRightRadius: spacing.borderRadius.lg * 2,
     overflow: 'hidden',
   },
   gradient: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
+    fontWeight: typography.h3.fontWeight as any,
     color: colors.text,
     textShadowColor: `${colors.shadow}20`,
     textShadowOffset: { width: 0, height: 1 },
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: spacing.sm,
-    borderRadius: spacing.borderRadius,
+    borderRadius: spacing.borderRadius.sm,
     backgroundColor: `${colors.surface}80`,
   },
   content: {

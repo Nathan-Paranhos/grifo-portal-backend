@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SupabaseService } from '@/services/supabase';
 import { OfflineService } from '@/services/offline';
 import { SyncService } from '@/services/sync';
+import grifoApiService from '@/services/grifoApi';
+import { useMe } from '@/hooks/useMe';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { colors, typography, spacing, borderRadius } from '@/constants/colors';
-import { SyncStats, User } from '@/types';
+import { SyncStats } from '@/types';
 import { FileText, Upload, Clock, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Camera } from 'lucide-react-native';
 
 export default function DashboardScreen() {
-  const [user, setUser] = useState<User | null>(null);
+  const { data: user } = useMe(true);
   const [stats, setStats] = useState<SyncStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,30 +25,18 @@ export default function DashboardScreen() {
 
   const loadData = async () => {
     try {
-      // Verificar se há usuário autenticado
-      const currentUser = await SupabaseService.getCurrentUser();
-      
-      if (!currentUser) {
-        // No authenticated user found
-        setUser(null);
-        setStats(null);
-        return;
-      }
-      
-      setUser(currentUser as any);
-      
-      // Carregar estatísticas locais
+      // Carregar apenas estatísticas locais - o usuário já foi validado pelo AuthGate
       const syncStats = await OfflineService.getSyncStats();
       setStats(syncStats);
       
-      // Tentar carregar KPIs do dashboard se houver empresa_id
-      if (currentUser.user_metadata?.empresa_id) {
-        try {
-          const dashboardData = await SupabaseService.getDashboardKPIs(currentUser.user_metadata.empresa_id);
+      // Tentar carregar KPIs do dashboard
+      try {
+        const dashboardResponse = await grifoApiService.getDashboard();
+        if (dashboardResponse.success) {
           // Dashboard KPIs loaded successfully
-        } catch (kpiError) {
-          // Could not load dashboard KPIs
         }
+      } catch (kpiError) {
+        // Could not load dashboard KPIs
       }
       
     } catch (error) {

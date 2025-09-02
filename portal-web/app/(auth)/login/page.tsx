@@ -21,7 +21,8 @@ export default function LoginPage() {
       
       if (result.success) {
         // Login bem-sucedido, redirecionar para dashboard
-        router.push('/dashboard');
+        // Usar replace para evitar problemas de navegação
+        router.replace('/dashboard');
       } else {
         setError(result.error || 'Erro ao fazer login');
       }

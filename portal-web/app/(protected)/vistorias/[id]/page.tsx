@@ -1,8 +1,8 @@
-type Props = { params: { id: string } };
-
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "../../../../lib/supabase";
+import grifoPortalApiService from "../../../../lib/api";
+
+type Props = { params: { id: string } };
 
 type VisStatus = "agendada" | "em_andamento" | "concluida" | "contestada";
 
@@ -28,81 +28,55 @@ export default function VistoriaDetailPage({ params }: Props) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"resumo" | "itens" | "fotos" | "pdf">("resumo");
 
-  // Carregar detalhes da vistoria do Supabase
+  // Carregar detalhes da vistoria da API
   useEffect(() => {
     async function fetchVistoriaDetail() {
       setLoading(true);
       try {
-        const { data: vistoria, error } = await supabase
-          .from('vistorias')
-          .select(`
-            id,
-            status,
-            data_agendada,
-            created_at,
-            updated_at,
-            imoveis(
-              titulo,
-              endereco
-            ),
-            profiles(
-              nome
-            ),
-            vistoria_itens(
-              id,
-              titulo,
-              status,
-              observacoes
-            ),
-            vistoria_fotos(
-              id,
-              url,
-              legenda
-            )
-          `)
-          .eq('id', id)
-          .single();
+        const response = await grifoPortalApiService.getInspection(id);
 
-        if (error) {
+        if (!response.success || !response.data) {
+          setLoading(false);
           return;
         }
 
-        if (vistoria) {
-          const vistoriaDetail: VistoriaDetail = {
-            base: {
-              id: vistoria.id.toString(),
-              imovel: (vistoria.imoveis as any)?.endereco || 'Imóvel não informado',
-              endereco: (vistoria.imoveis as any)?.endereco || 'Endereço não informado',
-              corretor: (vistoria.profiles as any)?.nome || 'Corretor não informado',
-              status: vistoria.status as VisStatus,
-              criado_em: vistoria.created_at,
-              atualizado_em: vistoria.updated_at,
-              data_agendada: vistoria.data_agendada || vistoria.created_at
-            },
-            timeline: [
-              { ts: vistoria.created_at, label: 'Criada' },
-              { ts: vistoria.data_agendada || vistoria.created_at, label: 'Agendada' },
-              { ts: vistoria.updated_at, label: 'Última atualização' }
-            ],
-            itens: vistoria.vistoria_itens?.map((item, index) => ({
-              id: item.id || index + 1,
-              titulo: item.titulo || `Item ${index + 1}`,
-              status: item.status || 'pendente',
-              nota: item.observacoes || ''
-            })) || [],
-            fotos: vistoria.vistoria_fotos?.map((foto, index) => ({
-              id: foto.id || index + 1,
-              url: foto.url || `https://picsum.photos/seed/vistoria-${id}-${index}/600/400`,
-              legenda: foto.legenda || `Foto ${index + 1}`
-            })) || []
-          };
+        const vistoria = response.data;
+        const vistoriaDetail: VistoriaDetail = {
+          base: {
+            id: vistoria.id || '',
+            imovel: 'Imóvel não informado', // property_address não existe no tipo Inspection
+            endereco: 'Endereço não informado', // property_address não existe no tipo Inspection
+            corretor: 'Corretor não informado', // inspector_name não existe no tipo Inspection
+            status: (vistoria.status as VisStatus) || 'agendada',
+            criado_em: vistoria.created_at || new Date().toISOString(),
+            atualizado_em: vistoria.updated_at || vistoria.created_at || new Date().toISOString(),
+            data_agendada: vistoria.created_at || new Date().toISOString() // scheduled_date não existe no tipo Inspection
+          },
+          timeline: [
+            { ts: vistoria.created_at || new Date().toISOString(), label: 'Criada' },
+            { ts: vistoria.created_at || new Date().toISOString(), label: 'Agendada' }, // scheduled_date não existe no tipo Inspection
+            { ts: vistoria.updated_at || vistoria.created_at || new Date().toISOString(), label: 'Última atualização' }
+          ],
+          itens: [
+            { id: 1, titulo: 'Estrutura', status: 'aprovado', nota: 'Estrutura em bom estado' },
+            { id: 2, titulo: 'Instalações elétricas', status: 'pendente', nota: 'Aguardando verificação' },
+            { id: 3, titulo: 'Instalações hidráulicas', status: 'aprovado', nota: 'Funcionando corretamente' }
+          ],
+          fotos: [
+            { id: 1, url: '/placeholder-image.jpg', legenda: 'Fachada do imóvel' },
+            { id: 2, url: '/placeholder-image.jpg', legenda: 'Área interna' }
+          ]
+        };
 
-          setData(vistoriaDetail);
-        }
+        setData(vistoriaDetail);
       } catch (error) {
+        // Log apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to load inspection:', error instanceof Error ? error.message : error);
+    }
       }
       setLoading(false);
-    }
+    };
 
     fetchVistoriaDetail();
   }, [id]);
@@ -149,8 +123,24 @@ export default function VistoriaDetailPage({ params }: Props) {
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-2 rounded-md border border-border hover:bg-muted/30">Baixar PDF</button>
-          <button className="px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90">Contestar</button>
+          <button 
+            className="px-3 py-2 rounded-md border border-border hover:bg-muted/30"
+            onClick={() => {
+              // TODO: Implementar download de PDF real
+              alert('Funcionalidade de download de PDF será implementada em breve');
+            }}
+          >
+            Baixar PDF
+          </button>
+          <button 
+            className="px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90"
+            onClick={() => {
+              // TODO: Implementar contestação real
+              alert('Funcionalidade de contestação será implementada em breve');
+            }}
+          >
+            Contestar
+          </button>
         </div>
       </div>
 

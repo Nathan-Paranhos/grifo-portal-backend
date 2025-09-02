@@ -45,9 +45,35 @@ class OneDriveService {
       const authUrl = this.buildAuthUrl();
       console.log('Auth URL:', authUrl);
       
-      // TODO: Implementar fluxo real de autenticação OAuth2
-      // Por enquanto, retorna erro até que a autenticação real seja implementada
-      throw new Error('Autenticação OAuth2 não implementada. Configure o fluxo completo.');
+      // TODO: Implementar WebBrowser quando expo-web-browser estiver disponível
+      // const { WebBrowser } = await import('expo-web-browser');
+      // const result = await WebBrowser.openAuthSessionAsync(
+      //   authUrl,
+      //   'exp://localhost:8081/--/auth/callback' // Redirect URI para desenvolvimento
+      // );
+      
+      // Temporariamente retornar erro até implementar alternativa
+      throw new Error('Autenticação OneDrive temporariamente indisponível');
+      
+      // TODO: Descomentar quando WebBrowser estiver disponível
+      // if (result.type === 'success' && result.url) {
+      //   const url = new URL(result.url);
+      //   const code = url.searchParams.get('code');
+      //   
+      //   if (code) {
+      //     const tokenData = await this.exchangeCodeForToken(code);
+      //     if (tokenData) {
+      //       const token: OneDriveToken = {
+      //         accessToken: tokenData.access_token,
+      //         refreshToken: tokenData.refresh_token,
+      //         expiresAt: Date.now() + (tokenData.expires_in * 1000)
+      //       };
+      //       await this.saveToken(token);
+      //     }
+      //   }
+      // } else {
+      //   throw new Error('Autenticação cancelada ou falhou');
+      // }
       
       // Buscar informações do usuário
       const user = await this.getCurrentUser();
@@ -348,7 +374,6 @@ class OneDriveService {
    */
   private async refreshToken(refreshToken: string): Promise<OneDriveToken | null> {
     try {
-      // TODO: Implementar renovação real do token OAuth2
       const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
         headers: {
@@ -356,9 +381,9 @@ class OneDriveService {
         },
         body: new URLSearchParams({
           client_id: this.config.clientId,
-          client_secret: this.config.clientSecret || '',
           refresh_token: refreshToken,
-          grant_type: 'refresh_token'
+          grant_type: 'refresh_token',
+          scope: 'Files.ReadWrite User.Read offline_access'
         })
       });
       
@@ -384,6 +409,36 @@ class OneDriveService {
    */
   private async saveToken(token: OneDriveToken): Promise<void> {
     await AsyncStorage.setItem('onedrive_token', JSON.stringify(token));
+  }
+
+  /**
+   * Troca o código de autorização por tokens de acesso
+   */
+  private async exchangeCodeForToken(code: string): Promise<any> {
+    try {
+      const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          client_id: this.config.clientId,
+          code: code,
+          redirect_uri: this.config.redirectUri,
+          grant_type: 'authorization_code',
+          scope: 'Files.ReadWrite User.Read offline_access'
+        })
+      });
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      
+      throw new Error(`Token exchange failed: ${response.status}`);
+    } catch (error) {
+      console.error('Erro ao trocar código por token:', error);
+      return null;
+    }
   }
 
   /**

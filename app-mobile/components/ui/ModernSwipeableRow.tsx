@@ -9,13 +9,13 @@ import {
 } from 'react-native';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Trash2, Edit, Archive, Star } from 'lucide-react-native';
+import { Trash, Edit, Archive, Star } from 'lucide-react-native';
 import { colors, spacing, typography } from '@/constants/colors';
 
 interface SwipeAction {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size: number; color: string }>;
+  icon: React.ComponentType<any>;
   color: string;
   backgroundColor: string;
   onPress: () => void;
@@ -52,8 +52,8 @@ export function ModernSwipeableRow({
     [{ nativeEvent: { translationX: translateX } }],
     {
       useNativeDriver: false,
-      listener: (event) => {
-        const { translationX } = event.nativeEvent;
+      listener: (event: any) => {
+        const translationX = event.nativeEvent.translationX;
         
         if (!isSwipingRef.current && Math.abs(translationX) > 10) {
           isSwipingRef.current = true;
@@ -116,7 +116,7 @@ export function ModernSwipeableRow({
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={[action.backgroundColor, `${action.backgroundColor}E0`]}
+              colors={[action.backgroundColor, `${action.backgroundColor}E0`, action.backgroundColor] as const}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.actionGradient}
@@ -164,7 +164,7 @@ export const SwipeActions = {
   delete: (onPress: () => void): SwipeAction => ({
     id: 'delete',
     label: 'Excluir',
-    icon: Trash2,
+    icon: Trash,
     color: colors.surface,
     backgroundColor: colors.danger,
     onPress,
@@ -175,7 +175,7 @@ export const SwipeActions = {
     label: 'Editar',
     icon: Edit,
     color: colors.surface,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.secondary,
     onPress,
   }),
   
@@ -193,7 +193,7 @@ export const SwipeActions = {
     label: 'Favorito',
     icon: Star,
     color: colors.surface,
-    backgroundColor: colors.success,
+    backgroundColor: colors.primary,
     onPress,
   }),
 };

@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
-import { supabase } from "../../../lib/supabase";
+import grifoPortalApiService from "../../../lib/api";
 
 type Modulo = "dashboard" | "vistorias" | "imoveis" | "usuarios" | "contestoes" | "empresas" | "pdf";
 type Acao = "view" | "create" | "update" | "delete" | "download";
@@ -29,44 +29,26 @@ export default function UsagePage() {
   const [loading, setLoading] = useState(true);
   const pageSize = 12;
 
-  const days = periodo === "7d" ? 7 : periodo === "30d" ? 30 : 90;
-  const since = new Date(Date.now() - (days - 1) * 86_400_000);
-
-  // Carregar dados de uso do Supabase
+  // Carregar dados de uso da API
   useEffect(() => {
     async function fetchUsageData() {
       setLoading(true);
       try {
-        const { data: logs, error } = await supabase
-          .from('usage_logs')
-          .select(`
-            id,
-            created_at,
-            modulo,
-            acao,
-            quantidade,
-            empresas(
-              nome
-            )
-          `)
-          .gte('created_at', since.toISOString())
-          .order('created_at', { ascending: false });
+        // TODO: Implementar endpoint de métricas de uso na API
+        // Por enquanto, retorna array vazio até a implementação do endpoint
+        const usageData: UsageRow[] = [];
 
-        if (error) {
-          console.error('Erro ao buscar dados de uso:', error);
-          return;
-        }
+        // Calcular período dentro do useEffect para evitar loop infinito
+        const days = periodo === "7d" ? 7 : periodo === "30d" ? 30 : 90;
+        const since = new Date(Date.now() - (days - 1) * 86_400_000);
 
-        const usageFormatado: UsageRow[] = logs?.map(log => ({
-          id: log.id.toString(),
-          data: log.created_at,
-          modulo: log.modulo as Modulo,
-          acao: log.acao as Acao,
-          empresa: (log.empresas as any)?.nome || 'Empresa não informada',
-          quantidade: log.quantidade || 1
-        })) || [];
+        // Filtrar por período quando houver dados
+        const filteredData = usageData.filter(item => {
+          const itemDate = new Date(item.data);
+          return itemDate >= since;
+        });
 
-        setItems(usageFormatado);
+        setItems(filteredData);
       } catch (error) {
         // Error handled silently
       } finally {
@@ -75,7 +57,7 @@ export default function UsagePage() {
     }
 
     fetchUsageData();
-  }, [periodo, since]);
+  }, [periodo]);
 
   const filtered = useMemo(() => {
     return items.filter((r) => {

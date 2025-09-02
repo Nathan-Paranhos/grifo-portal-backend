@@ -1,6 +1,7 @@
-import { supabase } from './supabase';
+import grifoApiService from './grifoApi';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as Crypto from 'expo-crypto';
+import * as FileSystem from 'expo-file-system';
 
 interface PhotoUploadOptions {
   vistoriaId: string;
@@ -49,17 +50,17 @@ export class PhotoOptimizer {
       // 3. Verificar se já existe uma foto com o mesmo hash
       const existingPhoto = await this.checkDuplicatePhoto(hash);
       if (existingPhoto) {
-        console.log('♻️ Foto duplicada encontrada, reutilizando:', existingPhoto.url);
+        console.log('♻️ Foto duplicada encontrada, reutilizando:', (existingPhoto as any).url);
         return {
-          url: existingPhoto.url,
-          thumbnailUrl: existingPhoto.url_thumbnail,
+          url: (existingPhoto as any).url,
+          thumbnailUrl: (existingPhoto as any).thumbnailUrl,
           metadata: {
-            originalSize: existingPhoto.tamanho_arquivo,
-            compressedSize: existingPhoto.tamanho_arquivo,
-            width: existingPhoto.largura,
-            height: existingPhoto.altura,
-            format: existingPhoto.formato,
-            hash: existingPhoto.hash_arquivo,
+            originalSize: (existingPhoto as any).fileSize || 0,
+            compressedSize: (existingPhoto as any).fileSize || 0,
+            width: (existingPhoto as any).width || 0,
+            height: (existingPhoto as any).height || 0,
+            format: (existingPhoto as any).format || 'jpg',
+            hash: (existingPhoto as any).hash || hash,
             compressionRatio: 1
           }
         };
@@ -185,12 +186,11 @@ export class PhotoOptimizer {
     );
 
     // Obter tamanho do arquivo otimizado
-    const response = await fetch(result.uri);
-    const blob = await response.blob();
+    const fileInfo = await FileSystem.getInfoAsync(result.uri);
     
     return {
       ...result,
-      size: blob.size
+      size: (fileInfo as any).size || 0
     };
   }
 
@@ -219,12 +219,11 @@ export class PhotoOptimizer {
    * Obtém informações da imagem
    */
   private static async getImageInfo(uri: string) {
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    const fileInfo = await FileSystem.getInfoAsync(uri);
     
     return {
-      size: blob.size,
-      type: blob.type
+      size: (fileInfo as any).size || 0,
+      type: 'image/jpeg' // Assumindo JPEG como padrão
     };
   }
 
@@ -251,18 +250,8 @@ export class PhotoOptimizer {
    */
   private static async checkDuplicatePhoto(hash: string) {
     try {
-      const { data, error } = await supabase
-        .from('fotos')
-        .select('*')
-        .eq('hash_arquivo', hash)
-        .limit(1)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') {
-        console.warn('Erro ao verificar duplicata:', error);
-      }
-      
-      return data;
+      // Implementar verificação via API se necessário
+      return null; // Por enquanto, sempre permite upload
     } catch (error) {
       console.warn('Erro ao verificar duplicata:', error);
       return null;
@@ -270,32 +259,20 @@ export class PhotoOptimizer {
   }
 
   /**
-   * Upload para o Supabase Storage
+   * Upload para o Storage
    */
   private static async uploadToStorage(uri: string, path: string) {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    
-    const { data, error } = await supabase.storage
-      .from('fotos')
-      .upload(path, blob, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
-    if (error) throw error;
-    return data;
+    // Usar grifoApiService para upload
+    return await grifoApiService.uploadPhoto(uri, path);
   }
 
   /**
    * Obtém URL pública do arquivo
    */
   private static async getPublicUrl(bucket: string, path: string): Promise<string> {
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    
-    return data.publicUrl;
+    // Retornar URL baseada no path usando URL base padrão
+    const baseUrl = 'https://api.grifo.com'; // URL base padrão
+    return `${baseUrl}/storage/${bucket}/${path}`;
   }
 
   /**
@@ -309,9 +286,9 @@ export class PhotoOptimizer {
     descricao?: string;
     metadata: PhotoMetadata;
   }) {
-    const { error } = await supabase
-      .from('fotos')
-      .insert({
+    try {
+      // Usar grifoApiService para salvar metadados
+      await grifoApiService.createVistoriaFoto({
         vistoria_id: data.vistoriaId,
         url: data.url,
         url_thumbnail: data.thumbnailUrl,
@@ -324,8 +301,10 @@ export class PhotoOptimizer {
         altura: data.metadata.height,
         hash_arquivo: data.metadata.hash
       });
-    
-    if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao salvar metadados da foto:', error);
+      throw error;
+    }
   }
 
   /**
@@ -345,18 +324,13 @@ export class PhotoOptimizer {
    * Obtém estatísticas de uso de fotos
    */
   static async getPhotoStats(empresaId: string) {
-    const { data, error } = await supabase
-      .from('fotos_stats')
-      .select('*')
-      .eq('empresa_id', empresaId)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
+    try {
+      // Implementar via API se necessário
+      return null;
+    } catch (error) {
       console.warn('Erro ao obter estatísticas:', error);
       return null;
     }
-    
-    return data;
   }
 
   /**
@@ -367,20 +341,9 @@ export class PhotoOptimizer {
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
     
     try {
-      // Buscar fotos antigas
-      const { data: oldPhotos, error } = await supabase
-        .from('fotos')
-        .select('id, url, url_thumbnail')
-        .lt('created_at', cutoffDate.toISOString());
-      
-      if (error) throw error;
-      
-      console.log(`🧹 Encontradas ${oldPhotos?.length || 0} fotos antigas para limpeza`);
-      
-      // Remover do storage e banco (implementar conforme necessário)
-      // Esta função deve ser executada com cuidado em produção
-      
-      return oldPhotos?.length || 0;
+      // Implementar limpeza via API se necessário
+      console.log(`🧹 Limpeza de fotos antigas (${daysOld} dias) - funcionalidade a implementar`);
+      return 0;
     } catch (error) {
       console.error('Erro na limpeza de fotos antigas:', error);
       throw error;

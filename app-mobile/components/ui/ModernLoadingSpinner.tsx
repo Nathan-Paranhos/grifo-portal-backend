@@ -14,7 +14,7 @@ export function ModernLoadingSpinner({
   size = 'medium', 
   text, 
   variant = 'gradient',
-  color = colors.accent 
+  color = colors.secondary 
 }: ModernLoadingSpinnerProps) {
   const spinValue = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(1)).current;

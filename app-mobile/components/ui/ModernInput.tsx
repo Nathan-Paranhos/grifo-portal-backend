@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInputProps,
   ViewStyle,
+  TextStyle,
   Animated,
   TouchableOpacity,
 } from 'react-native';
@@ -18,7 +19,7 @@ interface ModernInputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
   variant?: 'default' | 'filled' | 'glass';
-  style?: ViewStyle;
+  style?: TextStyle;
   containerStyle?: ViewStyle;
 }
 
