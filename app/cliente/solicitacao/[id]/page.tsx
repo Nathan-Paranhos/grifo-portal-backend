@@ -69,7 +69,7 @@ export default function SolicitacaoDetalhesPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const params = useParams();
-  const requestId = params.id as string;
+  const requestId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
     if (requestId) {

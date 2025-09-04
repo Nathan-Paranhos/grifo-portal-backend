@@ -85,7 +85,7 @@ export default function SolicitacaoDetalhesPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const router = useRouter();
   const params = useParams();
-  const requestId = params.id as string;
+  const requestId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
     loadCurrentUser();

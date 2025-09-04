@@ -6,6 +6,9 @@ import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
 import grifoPortalApiService, { Empresa as ApiEmpresa } from "../../../lib/api";
 
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
+
 type EmpresaStatus = "ativa" | "inativa";
 type Empresa = {
   id: string;
