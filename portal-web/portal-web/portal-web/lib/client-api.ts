@@ -5,13 +5,13 @@ const SUPABASE_URL = 'https://fsvwifbvehdhlufauahj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdndpZmJ2ZWhkaGx1ZmF1YWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MjI1MDYsImV4cCI6MjA3MDE5ODUwNn0.IC-I9QsH2t5o60v70TmzVFmfe8rUuFdMD5kMErQ4CPI';
 
 // URLs da API
-const GRIFO_API_BASE_URL = 'https://grifo-api-backend.onrender.com';
+const GRIFO_API_BASE_URL = 'https://grifo-api.onrender.com';
 const GRIFO_API_DEV_URL = 'http://localhost:5000';
 
-// Usar Supabase diretamente para produção
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? SUPABASE_URL
-  : GRIFO_API_DEV_URL;
+// Determinar qual URL usar baseado no ambiente
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? GRIFO_API_BASE_URL
+  : (process.env.NEXT_PUBLIC_GRIFO_API_URL || GRIFO_API_DEV_URL);
 
 interface ApiResponse<T = any> {
   success: boolean;

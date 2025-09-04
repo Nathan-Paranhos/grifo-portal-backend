@@ -5,9 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import grifoPortalApiService from '@/lib/api';
 
-// Desabilitado generateStaticParams para permitir "use client"
-// Esta página será renderizada dinamicamente
-
 interface InspectionRequest {
   id: string;
   client_id: string;

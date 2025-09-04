@@ -1,34 +1,19 @@
--- Verificar se existe usuário com o email fornecido
+-- Verificar se o usuário existe na tabela portal_users
 SELECT 
-  id,
-  email,
-  nome,
-  role,
-  ativo,
+  email, 
+  nome, 
+  ativo, 
   first_login_completed,
-  created_at
+  role,
+  empresa_id
 FROM portal_users 
 WHERE email = 'paranhoscontato.n@gmail.com';
 
--- Verificar também na tabela users
+-- Verificar se o usuário existe na tabela auth.users
 SELECT 
   id,
   email,
-  nome,
-  role,
-  is_active,
-  user_type,
-  first_login_completed,
-  created_at
-FROM users 
-WHERE email = 'paranhoscontato.n@gmail.com';
-
--- Verificar na tabela auth.users do Supabase
-SELECT 
-  id,
-  email,
-  created_at,
   email_confirmed_at,
-  last_sign_in_at
+  created_at
 FROM auth.users 
 WHERE email = 'paranhoscontato.n@gmail.com';
