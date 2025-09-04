@@ -23,6 +23,9 @@ type VistoriaDetail = {
   fotos: Array<{ id: number; url: string; legenda: string }>;
 };
 
+// Desabilitado generateStaticParams para permitir "use client"
+// Esta página será renderizada dinamicamente
+
 export default function VistoriaDetailPage({ params }: Props) {
   const { id } = params;
   const [data, setData] = useState<VistoriaDetail | null>(null);

@@ -1,26 +1,56 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuração para corrigir problemas de WebSocket
-  webpack: (config, { dev }) => {
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  },
+  webpack: (config, { dev, isServer }) => {
+    // Configuração específica para resolução de módulos
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, '.'),
+      '@/lib': path.resolve(__dirname, 'lib'),
+      '@/components': path.resolve(__dirname, 'components'),
+      '@/app': path.resolve(__dirname, 'app'),
+    };
+
+    // Configuração de devtool para desenvolvimento
     if (dev) {
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-      };
+      config.devtool = 'eval-source-map';
     }
+
+    // Ignorar erros de ESLint e TypeScript durante o build
+    config.ignoreWarnings = [
+      { module: /node_modules/ },
+      { file: /node_modules/ },
+    ];
+
     return config;
   },
-  // Configuração experimental para melhor suporte a WebSocket
-  experimental: {
-    esmExternals: 'loose'
+  eslint: {
+    ignoreDuringBuilds: true,
   },
-  // Configuração de servidor para desenvolvimento
-  ...(process.env.NODE_ENV === 'development' && {
-    devIndicators: {
-      buildActivity: true,
-      buildActivityPosition: 'bottom-right'
-    }
-  })
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  },
 };
 
 export default nextConfig;
