@@ -1,4 +1,5 @@
 // Serviço de API para o Portal Web Grifo - Multi-tenant Architecture
+import { supabase } from './supabase';
 
 // Configuração do Supabase para produção
 const SUPABASE_URL = 'https://fsvwifbvehdhlufauahj.supabase.co';
@@ -6,8 +7,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // API Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? SUPABASE_URL
+  ? 'https://grifo-api.onrender.com'
   : (process.env.NEXT_PUBLIC_GRIFO_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+
+// Flag para determinar se deve usar Supabase Auth nativo
+const USE_SUPABASE_AUTH = process.env.NODE_ENV === 'production';
 
 // Tenant padrão para o portal (pode ser configurado dinamicamente)
 const DEFAULT_TENANT = 'grifo';
@@ -214,38 +218,101 @@ class GrifoPortalApiService {
   // Autenticação
   async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/auth/portal/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: email.trim().toLowerCase(), 
-          password 
-        }),
-      });
+      if (USE_SUPABASE_AUTH) {
+        // Usar autenticação nativa do Supabase em produção
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
 
-      const data = await response.json();
+        if (error) {
+          return {
+            success: false,
+            error: error.message || 'Erro na autenticação'
+          };
+        }
 
-      if (response.ok && data.success && data.data) {
-        // Store tokens and company info from API response
-        this.saveAuthToken(data.data.access_token);
-        if (data.data.user?.company_id) {
-          this.saveCompanyId(data.data.user.company_id);
+        if (!data.user || !data.session) {
+          return {
+            success: false,
+            error: 'Falha na autenticação'
+          };
+        }
+
+        // Buscar dados do usuário na tabela portal_users
+        const { data: userData, error: userError } = await supabase
+          .from('portal_users')
+          .select('*')
+          .eq('email', email.trim().toLowerCase())
+          .single();
+
+        if (userError || !userData) {
+          return {
+            success: false,
+            error: 'Usuário não encontrado no portal'
+          };
+        }
+
+        const user: User = {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          role: userData.role,
+          company_id: userData.company_id,
+          phone: userData.phone,
+          avatar_url: userData.avatar_url,
+          created_at: userData.created_at,
+          updated_at: userData.updated_at
+        };
+
+        // Salvar token e company_id
+        this.saveAuthToken(data.session.access_token);
+        if (userData.company_id) {
+          this.saveCompanyId(userData.company_id);
         }
         
         return {
           success: true,
           data: {
-            user: data.data.user,
-            token: data.data.access_token
+            user,
+            token: data.session.access_token
           }
         };
       } else {
-        return {
-          success: false,
-          error: data.message || 'Credenciais inválidas'
-        };
+        // Usar API customizada em desenvolvimento
+        const response = await fetch(`${this.baseUrl}/api/v1/auth/portal/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            email: email.trim().toLowerCase(), 
+            password 
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success && data.data) {
+          // Store tokens and company info from API response
+          this.saveAuthToken(data.data.access_token);
+          if (data.data.user?.company_id) {
+            this.saveCompanyId(data.data.user.company_id);
+          }
+          
+          return {
+            success: true,
+            data: {
+              user: data.data.user,
+              token: data.data.access_token
+            }
+          };
+        } else {
+          return {
+            success: false,
+            error: data.message || 'Credenciais inválidas'
+          };
+        }
       }
     } catch (error) {
       // Log apenas em desenvolvimento
@@ -260,7 +327,28 @@ class GrifoPortalApiService {
   }
 
   async logout(): Promise<ApiResponse<void>> {
-    this.clearAuthToken();
+    try {
+      if (USE_SUPABASE_AUTH) {
+        // Usar logout nativo do Supabase em produção
+        await supabase.auth.signOut();
+      } else {
+        // Call logout endpoint if we have a token
+        if (this.authToken) {
+          await fetch(`${this.baseUrl}/api/v1/auth/portal/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.authToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    } finally {
+      // Always clear local storage
+      this.clearAuthToken();
+    }
     return { success: true };
   }
 
@@ -275,25 +363,34 @@ class GrifoPortalApiService {
   }
 
   // Verificar se está autenticado
-  isAuthenticated(): boolean {
-    if (!this.authToken) {
-      return false;
-    }
-    
-    // Verificar se o token não está expirado
+  async isAuthenticated(): Promise<boolean> {
     try {
-      const tokenPayload = JSON.parse(atob(this.authToken.split('.')[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-      
-      if (tokenPayload.exp && tokenPayload.exp < currentTime) {
-        this.clearAuthToken();
+      if (USE_SUPABASE_AUTH) {
+        // Verificar sessão do Supabase em produção
+        const { data: { session } } = await supabase.auth.getSession();
+        return !!session;
+      } else {
+        // Verificar via API customizada em desenvolvimento
+        const token = this.authToken;
+        if (!token) return false;
+
+        const response = await fetch(`${this.baseUrl}/api/v1/auth/portal/verify`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data.success === true;
+        }
+
         return false;
       }
-      
-      return true;
     } catch (error) {
-      // Se não conseguir decodificar o token, considera inválido
-      this.clearAuthToken();
+      console.error('Erro na verificação de autenticação:', error);
       return false;
     }
   }
