@@ -25,7 +25,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "https://grifo-api.onrender.com/api/:splat"
   status = 200
 
 [dev]
