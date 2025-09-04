@@ -7,6 +7,9 @@ import Tooltip from "../../../components/ui/Tooltip";
 import grifoPortalApiService, { User as UserType, UserSession } from "../../../lib/api";
 import { toast } from "sonner";
 
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
+
 export default function PerfilPage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [sessions, setSessions] = useState<UserSession[]>([]);

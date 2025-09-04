@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import grifoPortalApiService from "../../../../lib/api";
+import { Upload, X } from "lucide-react";
 
 type Props = { params: { id: string } };
 
@@ -27,6 +28,57 @@ export default function VistoriaDetailPage({ params }: Props) {
   const [data, setData] = useState<VistoriaDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"resumo" | "itens" | "fotos" | "pdf">("resumo");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('photos', file);
+      });
+
+      const response = await grifoPortalApiService.uploadInspectionPhotos(id, formData);
+      
+      // Atualizar dados da vistoria com as novas fotos
+      if (data) {
+        setData({
+          ...data,
+          fotos: [...data.fotos, ...response.photos]
+        });
+      }
+      
+      // Limpar input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Erro ao fazer upload das fotos:', error);
+      alert('Erro ao fazer upload das fotos. Tente novamente.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: number) => {
+    if (!confirm('Tem certeza que deseja excluir esta foto?')) return;
+
+    try {
+      await grifoPortalApiService.deleteInspectionPhoto(id, photoId.toString());
+      
+      // Remover foto dos dados locais
+      if (data) {
+        setData({
+          ...data,
+          fotos: data.fotos.filter(f => f.id !== photoId)
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao excluir foto:', error);
+      alert('Erro ao excluir foto. Tente novamente.');
+    }
+  };
 
   // Carregar detalhes da vistoria da API
   useEffect(() => {
@@ -216,13 +268,67 @@ export default function VistoriaDetailPage({ params }: Props) {
           )}
 
           {tab === "fotos" && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {data.fotos.map((f) => (
-                <figure key={f.id} className="rounded-lg overflow-hidden border border-border">
-                  <img src={f.url} alt={f.legenda} className="w-full h-40 object-cover" />
-                  <figcaption className="text-xs text-muted-foreground p-2">{f.legenda}</figcaption>
-                </figure>
-              ))}
+            <div className="space-y-4">
+              {/* Upload de Fotos */}
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Fotos da Vistoria</h3>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="photo-upload"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoUpload}
+                    disabled={uploadingPhoto}
+                  />
+                  <label
+                    htmlFor="photo-upload"
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border ${
+                      uploadingPhoto
+                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                        : 'bg-primary text-primary-foreground hover:opacity-90 cursor-pointer'
+                    }`}
+                  >
+                    {uploadingPhoto ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Adicionar Fotos
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+              
+              {/* Grid de Fotos */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {data.fotos.map((f) => (
+                  <figure key={f.id} className="rounded-lg overflow-hidden border border-border relative group">
+                    <img src={f.url} alt={f.legenda} className="w-full h-40 object-cover" />
+                    <button
+                      onClick={() => handleDeletePhoto(f.id)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="Excluir foto"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    <figcaption className="text-xs text-muted-foreground p-2">{f.legenda}</figcaption>
+                  </figure>
+                ))}
+              </div>
+              
+              {data.fotos.length === 0 && (
+                <div className="text-center py-8 border border-dashed border-border rounded-lg">
+                  <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-2">Nenhuma foto adicionada ainda</p>
+                  <p className="text-sm text-muted-foreground">Clique em "Adicionar Fotos" para enviar imagens da vistoria</p>
+                </div>
+              )}
             </div>
           )}
 

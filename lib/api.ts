@@ -1,11 +1,13 @@
 // Serviço de API para o Portal Web Grifo - Multi-tenant Architecture
 
-// Configuração da API Grifo
-const GRIFO_API_BASE_URL = 'https://grifo-api-backend.onrender.com';
-const GRIFO_API_DEV_URL = 'http://localhost:5000'; // API local para desenvolvimento
+// Configuração do Supabase para produção
+const SUPABASE_URL = 'https://fsvwifbvehdhlufauahj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdndpZmJ2ZWhkaGx1ZmF1YWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MjI1MDYsImV4cCI6MjA3MDE5ODUwNn0.IC-I9QsH2t5o60v70TmzVFmfe8rUuFdMD5kMErQ4CPI';
 
-// Usar URL local durante desenvolvimento
-const API_BASE_URL = process.env.NODE_ENV === 'production' ? GRIFO_API_BASE_URL : GRIFO_API_DEV_URL;
+// API Configuration
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? SUPABASE_URL
+  : (process.env.NEXT_PUBLIC_GRIFO_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 
 // Tenant padrão para o portal (pode ser configurado dinamicamente)
 const DEFAULT_TENANT = 'grifo';
@@ -466,6 +468,23 @@ class GrifoPortalApiService {
 
   async getInspection(id: string): Promise<ApiResponse<Inspection>> {
     return this.makeRequest<Inspection>(`${this.getTenantPath()}/inspections/${id}`);
+  }
+
+  async uploadInspectionPhotos(inspectionId: string, formData: FormData): Promise<ApiResponse<{ photos: any[] }>> {
+    return this.makeRequest<{ photos: any[] }>(`${this.getTenantPath()}/inspections/${inspectionId}/photos`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Remove Content-Type para permitir multipart/form-data
+        'Authorization': this.authToken ? `Bearer ${this.authToken}` : ''
+      }
+    });
+  }
+
+  async deleteInspectionPhoto(inspectionId: string, photoId: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>(`${this.getTenantPath()}/inspections/${inspectionId}/photos/${photoId}`, {
+      method: 'DELETE'
+    });
   }
 
 

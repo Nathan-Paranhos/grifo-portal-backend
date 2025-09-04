@@ -2,9 +2,15 @@
 import React, { useMemo, useState, useEffect } from "react";
 import KpiCard from "../../../components/ui/KpiCard";
 import SectionCard from "../../../components/ui/SectionCard";
-import Tooltip from "../../../components/ui/Tooltip";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
+import { Tooltip } from "../../../components/ui/Tooltip";
 import grifoPortalApiService, { Inspection } from "../../../lib/api";
+import { Plus, Edit, Trash2 } from "lucide-react";
+import NovaVistoriaModal from "./components/NovaVistoriaModal";
+import EditarVistoriaModal from "./components/EditarVistoriaModal";
+
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
 
 type VisStatus = "agendada" | "em_andamento" | "concluida" | "contestada";
 type VisItem = {
@@ -16,29 +22,131 @@ type VisItem = {
   status: VisStatus;
 };
 
+// Dados mockados para teste das funcionalidades
+const mockVistorias: VisItem[] = [
+  {
+    id: '1',
+    imovel: 'Apartamento 3 quartos',
+    endereco: 'Rua das Flores, 123 - Copacabana, RJ',
+    corretor: 'João Silva',
+    data: '2024-01-25T09:00:00Z',
+    status: 'agendada'
+  },
+  {
+    id: '2',
+    imovel: 'Casa 4 quartos',
+    endereco: 'Av. Atlântica, 456 - Ipanema, RJ',
+    corretor: 'Maria Santos',
+    data: '2024-01-24T14:00:00Z',
+    status: 'em_andamento'
+  },
+  {
+    id: '3',
+    imovel: 'Studio moderno',
+    endereco: 'Rua Barata Ribeiro, 789 - Copacabana, RJ',
+    corretor: 'Pedro Costa',
+    data: '2024-01-23T10:30:00Z',
+    status: 'concluida'
+  },
+  {
+    id: '4',
+    imovel: 'Cobertura duplex',
+    endereco: 'Av. Vieira Souto, 321 - Ipanema, RJ',
+    corretor: 'Ana Oliveira',
+    data: '2024-01-22T16:00:00Z',
+    status: 'contestada'
+  },
+  {
+    id: '5',
+    imovel: 'Apartamento 2 quartos',
+    endereco: 'Rua Visconde de Pirajá, 654 - Ipanema, RJ',
+    corretor: 'Carlos Ferreira',
+    data: '2024-01-26T11:00:00Z',
+    status: 'agendada'
+  },
+  {
+    id: '6',
+    imovel: 'Casa térrea',
+    endereco: 'Rua General Urquiza, 987 - Leblon, RJ',
+    corretor: 'Lucia Mendes',
+    data: '2024-01-27T15:30:00Z',
+    status: 'agendada'
+  },
+  {
+    id: '7',
+    imovel: 'Loft industrial',
+    endereco: 'Rua do Catete, 147 - Catete, RJ',
+    corretor: 'Roberto Lima',
+    data: '2024-01-21T13:00:00Z',
+    status: 'concluida'
+  },
+  {
+    id: '8',
+    imovel: 'Apartamento 1 quarto',
+    endereco: 'Rua Siqueira Campos, 258 - Copacabana, RJ',
+    corretor: 'Fernanda Rocha',
+    data: '2024-01-28T09:30:00Z',
+    status: 'em_andamento'
+  },
+  {
+    id: '9',
+    imovel: 'Casa de vila',
+    endereco: 'Rua Jardim Botânico, 369 - Jardim Botânico, RJ',
+    corretor: 'Marcos Alves',
+    data: '2024-01-29T14:30:00Z',
+    status: 'agendada'
+  },
+  {
+    id: '10',
+    imovel: 'Apartamento cobertura',
+    endereco: 'Av. Nossa Senhora de Copacabana, 741 - Copacabana, RJ',
+    corretor: 'Juliana Barbosa',
+    data: '2024-01-20T10:00:00Z',
+    status: 'contestada'
+  },
+  {
+    id: '11',
+    imovel: 'Sala comercial',
+    endereco: 'Av. Rio Branco, 852 - Centro, RJ',
+    corretor: 'Eduardo Nascimento',
+    data: '2024-01-30T08:00:00Z',
+    status: 'agendada'
+  },
+  {
+    id: '12',
+    imovel: 'Apartamento 3 quartos',
+    endereco: 'Rua Prudente de Morais, 963 - Ipanema, RJ',
+    corretor: 'Camila Torres',
+    data: '2024-01-19T17:00:00Z',
+    status: 'concluida'
+  }
+];
+
 // Função para buscar vistorias da API
 async function fetchVistorias(): Promise<VisItem[]> {
   try {
-    const response = await grifoPortalApiService.getInspections();
+    // Temporariamente retornando dados mockados para teste
+    // TODO: Implementar chamada real à API quando autenticação estiver configurada
+    return mockVistorias;
     
-    if (!response.success || !response.data) {
-      return [];
-    }
-    
-    return response.data.map(inspection => ({
-      id: inspection.id || '',
-      imovel: 'Imóvel', // property_title não existe no tipo Inspection
-      endereco: 'Endereço não informado', // property_address não existe no tipo Inspection
-      corretor: 'Não informado', // inspector_name não existe no tipo Inspection
-      data: inspection.created_at || new Date().toISOString(), // scheduled_date não existe no tipo Inspection
-      status: (inspection.status as VisStatus) || 'agendada'
-    }));
+    // Código original comentado:
+    // const response = await grifoPortalApiService.getInspections();
+    // if (!response.success || !response.data) {
+    //   return [];
+    // }
+    // return response.data.map(inspection => ({
+    //   id: inspection.id || '',
+    //   imovel: 'Imóvel',
+    //   endereco: 'Endereço não informado',
+    //   corretor: 'Não informado',
+    //   data: inspection.created_at || new Date().toISOString(),
+    //   status: (inspection.status as VisStatus) || 'agendada'
+    // }));
   } catch (error) {
-    // Log apenas em desenvolvimento
     if (process.env.NODE_ENV === 'development') {
       console.error('Failed to fetch inspections:', error instanceof Error ? error.message : error);
     }
-    return [];
+    return mockVistorias; // Fallback para dados mockados
   }
 }
 
@@ -49,6 +157,42 @@ export default function VistoriasPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [vistorias, setVistorias] = useState<VisItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [showEditarVistoriaModal, setShowEditarVistoriaModal] = useState(false);
+  const [vistoriaParaEditar, setVistoriaParaEditar] = useState<Inspection | null>(null);
+  const [vistoriaParaExcluir, setVistoriaParaExcluir] = useState<Inspection | null>(null);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+  const handleExcluirVistoria = (vistoria: Inspection) => {
+    setVistoriaParaExcluir(vistoria);
+  };
+
+  const confirmRemove = async () => {
+    if (!vistoriaParaExcluir) return;
+    
+    try {
+      // Aqui seria a chamada para a API de exclusão
+      // await grifoPortalApiService.deleteInspection(vistoriaParaExcluir.id);
+      
+      // Por enquanto, apenas remove da lista local
+      setVistorias(prev => prev.filter(v => v.id !== vistoriaParaExcluir.id));
+      
+      setVistoriaParaExcluir(null);
+      setToast({ message: "Vistoria excluída com sucesso", tone: "success" });
+      setTimeout(() => setToast(null), 3000);
+      
+      // Recarregar as vistorias após exclusão
+      await fetchVistorias();
+    } catch (error) {
+      console.error('Erro ao excluir vistoria:', error);
+      setToast({ message: "Erro ao excluir vistoria", tone: "error" });
+      setTimeout(() => setToast(null), 3000);
+    }
+  };
+
+  const cancelRemove = () => {
+    setVistoriaParaExcluir(null);
+  };
   const pageSize = 10;
 
   // Carregar vistorias do Supabase
@@ -121,11 +265,9 @@ export default function VistoriasPage() {
         <Tooltip content="Criar nova vistoria">
           <button
             className="h-9 inline-flex items-center rounded-md border border-border px-3 text-sm hover:bg-muted/30"
-            onClick={() => {
-              // TODO: Implementar modal ou navegação para criar nova vistoria
-              alert('Funcionalidade de criar nova vistoria será implementada em breve');
-            }}
+            onClick={() => setShowModal(true)}
           >
+            <Plus className="w-4 h-4 mr-2" />
             Nova vistoria
           </button>
         </Tooltip>
@@ -304,12 +446,33 @@ export default function VistoriasPage() {
                     {v.status === "contestada" && <StatusBadge tone="rose">Contestada</StatusBadge>}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <a
-                      href={`/vistorias/${v.id}`}
-                      className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30"
-                    >
-                      Abrir
-                    </a>
+                    <div className="flex items-center gap-2 justify-end">
+                      <Tooltip content="Editar vistoria">
+                        <button
+                          onClick={() => {
+                            setVistoriaParaEditar(v);
+                            setShowEditarVistoriaModal(true);
+                          }}
+                          className="p-1.5 rounded-md border border-border hover:bg-muted/30"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Excluir vistoria">
+                          <button
+                            onClick={() => handleExcluirVistoria(v)}
+                            className="p-1.5 rounded-md border border-border hover:bg-muted/30 text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </Tooltip>
+                      <a
+                        href={`/vistorias/${v.id}`}
+                        className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30"
+                      >
+                        Abrir
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -347,6 +510,79 @@ export default function VistoriasPage() {
           </div>
         </div>
       </SectionCard>
+      
+      <NovaVistoriaModal 
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={() => {
+          setShowModal(false);
+          // Recarrega a lista após criar nova vistoria
+          async function reloadVistorias() {
+            setLoading(true);
+            const data = await fetchVistorias();
+            setVistorias(data);
+            setLoading(false);
+          }
+          reloadVistorias();
+        }}
+      />
+      
+      {vistoriaParaEditar && (
+        <EditarVistoriaModal 
+          isOpen={showEditarVistoriaModal}
+          vistoria={vistoriaParaEditar}
+          onClose={() => {
+            setShowEditarVistoriaModal(false);
+            setVistoriaParaEditar(null);
+          }}
+          onSuccess={() => {
+            setShowEditarVistoriaModal(false);
+            setVistoriaParaEditar(null);
+            // Recarrega a lista após editar vistoria
+            async function reloadVistorias() {
+              setLoading(true);
+              const data = await fetchVistorias();
+              setVistorias(data);
+              setLoading(false);
+            }
+            reloadVistorias();
+          }}
+        />
+      )}
+
+      {/* Modal de confirmação de exclusão */}
+      {vistoriaParaExcluir && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={cancelRemove}>
+          <div className="w-full max-w-md rounded-xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-medium mb-2">Confirmar exclusão</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Tem certeza que deseja excluir a vistoria do imóvel &quot;{vistoriaParaExcluir.imovel}&quot;?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button className="px-3 py-2 rounded-md border border-border" onClick={cancelRemove}>
+                Cancelar
+              </button>
+              <button 
+                className="px-3 py-2 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" 
+                onClick={confirmRemove}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast de notificação */}
+      {toast && (
+        <div className={`fixed right-4 top-4 z-50 rounded-md px-3 py-2 text-sm shadow-md border ${
+          toast.tone === "success" 
+            ? "bg-emerald-600 text-white border-emerald-500" 
+            : "bg-rose-600 text-white border-rose-500"
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
