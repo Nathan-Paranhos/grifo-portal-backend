@@ -103,3 +103,7 @@ supabase/.temp
 
 # Keep .env.render for deployment reference
 !.env.render
+
+# Ignore portal backend folder to avoid submodule conflicts
+grifo-portal-backend/
+grifo-api-backend/
