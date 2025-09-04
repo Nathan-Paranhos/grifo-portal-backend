@@ -1,12 +1,12 @@
 [build]
   # Diretório base onde está o projeto Next.js
-  base = "portal-web"
+  base = "portal-web/portal-web"
   
   # Comando de build
   command = "npm run build"
   
   # Diretório de publicação (Next.js export gera em out)
-  publish = "out"
+  publish = "portal-web/portal-web/out"
 
 # Plugin do Next.js removido para export estático
 
