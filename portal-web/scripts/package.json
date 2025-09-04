@@ -1,0 +1,19 @@
+{
+  "name": "grifo-simulation-scripts",
+  "version": "1.0.0",
+  "description": "Scripts de simulação e testes de performance para o sistema Grifo",
+  "main": "index.js",
+  "scripts": {
+    "test:client": "node client-registration.js",
+    "test:inspection": "node inspection-simulation.js",
+    "test:contestation": "node contestation-simulation.js",
+    "test:api": "node api-performance-test.js",
+    "install:browsers": "npx playwright install"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {},
+  "author": "Grifo Team",
+  "license": "MIT"
+}

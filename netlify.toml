@@ -1,18 +1,24 @@
 [build]
   # Diretório base onde está o projeto Next.js
-  base = "portal-web"
+  base = "portal-web/portal-web"
   
-  # Comando de build
-  command = "npm run build"
+  # Comando de build com instalação de dependências
+  command = "npm ci && npm run build"
   
-  # Diretório de publicação (Next.js export gera em out)
-  publish = "out"
+  # Diretório de publicação (Next.js SSR)
+  publish = ".next"
 
 # Plugin do Next.js removido para export estático
 
 [build.environment]
   # Versão do Node.js
   NODE_VERSION = "20"
+  
+  # Limpar cache do npm
+  NPM_FLAGS = "--prefer-offline --no-audit --progress=false"
+  
+  # Configurações de build
+  CI = "true"
   
   # Variáveis de ambiente para produção
   NEXT_PUBLIC_SUPABASE_URL = "https://fsvwifbvehdhlufauahj.supabase.co"
@@ -25,11 +31,8 @@
   NODE_ENV = "production"
   NEXT_TELEMETRY_DISABLED = "1"
 
-# Configurações de redirecionamento para SPA
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Configurações de redirecionamento para Next.js SSR
+# Removido redirecionamento SPA para permitir SSR
 
 # Headers de segurança
 [[headers]]

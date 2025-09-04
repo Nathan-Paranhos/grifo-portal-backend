@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+
+
+@layer base {
+  :root {
+    /* Black & Gold theme */
+    /* Base colors (light mode) */
+    --background: 0 0% 5%;            /* #0D0D0D */
+    --foreground: 0 0% 98%;           /* #F9F9F9 */
+    --card: 0 0% 12%;                 /* #1F1F1F */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 46 65% 53%;            /* #D4AF37 */
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 12%;            /* surface */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 55%;                /* #8C8C8C */
+    --muted-foreground: 0 0% 75%;
+    --accent: 46 65% 53%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 355 78% 57%;       /* #E63946 */
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 18%;               /* around #2E2E2E */
+    --input: 0 0% 18%;
+    --ring: 46 65% 53%;
+    --chart-1: 46 65% 53%;
+    --chart-2: 355 78% 57%;
+    --chart-3: 0 0% 75%;
+    --chart-4: 210 6% 30%;
+    --chart-5: 0 0% 12%;
+    --radius: 12px;
+  }
+  .dark {
+    /* Dark remains the core palette for the app */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 46 65% 53%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 55%;
+    --muted-foreground: 0 0% 75%;
+    --accent: 46 65% 53%;
+    --accent-foreground: 0 0% 5%;
+    --destructive: 355 78% 57%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 46 65% 53%;
+    --chart-1: 46 65% 53%;
+    --chart-2: 355 78% 57%;
+    --chart-3: 0 0% 75%;
+    --chart-4: 210 6% 30%;
+    --chart-5: 0 0% 12%;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
