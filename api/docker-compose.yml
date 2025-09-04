@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # Supabase Local Development Stack
+  postgres:
+    image: postgres:15-alpine
+    container_name: grifo-postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - grifo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    container_name: grifo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - grifo-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Supabase Studio (opcional para desenvolvimento)
+  studio:
+    image: supabase/studio:latest
+    container_name: grifo-studio
+    environment:
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      STUDIO_PG_META_URL: http://localhost:54321/pg
+    ports:
+      - "3000:3000"
+    networks:
+      - grifo-network
+    depends_on:
+      - postgres
+    profiles:
+      - studio
+
+  # MinIO for local S3-compatible storage (desenvolvimento)
+  minio:
+    image: minio/minio:latest
+    container_name: grifo-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - grifo-network
+    command: server /data --console-address ":9001"
+    profiles:
+      - storage
+
+  # Nginx para proxy reverso (produção)
+  nginx:
+    image: nginx:alpine
+    container_name: grifo-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - grifo-network
+    depends_on:
+      - postgres
+    profiles:
+      - production
+
+  # Monitoring com Prometheus (opcional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: grifo-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - grifo-network
+    profiles:
+      - monitoring
+
+  # Grafana para dashboards (opcional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grifo-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - grifo-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  grifo-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
