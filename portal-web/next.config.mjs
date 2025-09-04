@@ -14,7 +14,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   webpack: (config, { dev, isServer }) => {
-    // Configuração específica para resolução de módulos
+    // Configuração robusta para resolução de módulos
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname, '.'),
@@ -22,6 +22,18 @@ const nextConfig = {
       '@/components': path.resolve(__dirname, 'components'),
       '@/app': path.resolve(__dirname, 'app'),
     };
+
+    // Configuração de extensões para resolução
+    config.resolve.extensions = [
+      '.tsx', '.ts', '.jsx', '.js', '.json', '.mjs'
+    ];
+
+    // Configuração de módulos para resolução
+    config.resolve.modules = [
+      path.resolve(__dirname, '.'),
+      path.resolve(__dirname, 'node_modules'),
+      'node_modules'
+    ];
 
     // Configuração de devtool para desenvolvimento
     if (dev) {
