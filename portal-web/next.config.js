@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'export',
-  // trailingSlash: true,
+  // output: 'export', // Desabilitado para permitir páginas dinâmicas
+  trailingSlash: true,
   images: {
     unoptimized: true
   },

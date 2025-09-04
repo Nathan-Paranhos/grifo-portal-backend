@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // Habilitado para export estático no Netlify
+  // output: 'export', // Desabilitado para permitir páginas dinâmicas
   trailingSlash: true,
   images: {
     unoptimized: true
@@ -12,19 +12,6 @@ const nextConfig = {
     if (dev && !isServer) {
       config.devtool = 'cheap-module-source-map'
     }
-    
-    // Configuração explícita de aliases para resolver problemas no Netlify
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname),
-      '@/lib': require('path').resolve(__dirname, 'lib'),
-      '@/components': require('path').resolve(__dirname, 'components'),
-      '@/app': require('path').resolve(__dirname, 'app'),
-    }
-    
-    // Garantir que extensões sejam resolvidas corretamente
-    config.resolve.extensions = ['.tsx', '.ts', '.jsx', '.js', '.json']
-    
     return config
   },
   eslint: {
