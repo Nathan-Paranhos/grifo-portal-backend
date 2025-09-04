@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // API Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? SUPABASE_URL
+  ? 'https://grifo-api.onrender.com'
   : (process.env.NEXT_PUBLIC_GRIFO_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 
 // Flag para determinar se deve usar Supabase Auth nativo
