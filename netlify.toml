@@ -3,7 +3,7 @@
   base = "portal-web/portal-web"
   
   # Comando de build com instalação de dependências e limpeza de cache
-  command = "npm cache clean --force && rm -rf node_modules package-lock.json && npm install && npm run build"
+  command = "npm cache clean --force && rm -rf node_modules package-lock.json .next && npm install --no-optional && npm run build"
   
   # Diretório de publicação (Next.js SSR)
   publish = ".next"
@@ -12,7 +12,7 @@
 
 [build.environment]
   # Versão do Node.js
-  NODE_VERSION = "20"
+  NODE_VERSION = "20.19.2"
   
   # Limpar cache do npm
   NPM_FLAGS = "--prefer-offline --no-audit --progress=false"
