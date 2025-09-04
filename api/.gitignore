@@ -3,23 +3,16 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 
 # Environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.test
 
 # Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-.pnpm-debug.log*
 
 # Runtime data
 pids
@@ -29,47 +22,16 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
 
 # nyc test coverage
 .nyc_output
-
-# Grunt intermediate storage
-.grunt
-
-# Bower dependency directory
-bower_components
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons
-build/Release
 
 # Dependency directories
 node_modules/
 jspm_packages/
 
-# Snowpack dependency directory
-web_modules/
-
-# TypeScript cache
-*.tsbuildinfo
-
 # Optional npm cache directory
 .npm
-
-# Optional eslint cache
-.eslintcache
-
-# Optional stylelint cache
-.stylelintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -80,31 +42,10 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache
-.cache
-.parcel-cache
+# dotenv environment variables file
+.env
 
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-
-# Editor directories and files
+# IDE files
 .vscode/
 .idea/
 *.swp
@@ -120,56 +61,24 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Upload directories
-uploads/
-static/uploads/
-public/uploads/
+# Temporary files
+tmp/
+temp/
 
-# Database
-*.sqlite
-*.sqlite3
-*.db
+# Build outputs
+build/
+dist/
+
+# Docker
+.dockerignore
 
 # Backup files
 *.backup
 *.bak
-*.old
 
-# Docker
-Dockerfile.dev
-docker-compose.override.yml
-
-# PM2
-ecosystem.config.js
-
-# Render specific
-.render/
-
-# Local development
-.local/
-dev-data/
-test-data/
-
-# Jest cache
-.jest-cache/
-
-# API specific
-server-minimal.js
-minimal-server.js
-
-# Supabase local
-.supabase/
-
-# Debug files
-debug.log
-error.log
-
-# Temporary files
-temp_*
-create_test_data.*
-check_data.*
-temp-*
-
-# Production build
-build/
-dist/
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js

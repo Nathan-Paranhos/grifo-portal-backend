@@ -24,7 +24,7 @@ function ClientRegisterContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const tenantParam = searchParams.get('tenant');
+    const tenantParam = searchParams.get('tenant') || null;
     if (tenantParam) {
       setTenant(tenantParam);
       clientApiService.setTenant(tenantParam);

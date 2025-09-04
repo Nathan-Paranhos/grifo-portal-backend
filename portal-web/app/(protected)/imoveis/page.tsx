@@ -6,6 +6,9 @@ import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
 import grifoPortalApiService from "../../../lib/api";
 
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
+
 type ImovelStatus = "ativo" | "inativo" | "alugado" | "manutencao";
 type ImovelTipo = "apartamento" | "casa" | "comercial" | "terreno";
 type Imovel = {

@@ -898,7 +898,7 @@ router.get(
   '/stats',
   authSupabase,
   asyncHandler(async (req, res) => {
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
     const userType = req.userType;
     const userData = req.user;
 

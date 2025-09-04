@@ -9,7 +9,9 @@
     "install:all": "npm install && cd api && npm install && cd ../portal-web && npm install && cd ../app-mobile && npm install",
     "build:api": "cd api && npm run build",
     "build:portal": "cd portal-web && npm run build",
-    "build:mobile": "cd app-mobile && npm run build"
+    "build:mobile": "cd app-mobile && npm run build",
+    "build": "cd portal-web && npm run build",
+    "start": "cd portal-web && npm run start"
   },
   "keywords": [
     "grifo",

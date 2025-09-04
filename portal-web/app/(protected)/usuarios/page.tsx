@@ -6,6 +6,9 @@ import SectionCard from "../../../components/ui/SectionCard";
 import Tooltip from "../../../components/ui/Tooltip";
 import grifoPortalApiService, { User } from "../../../lib/api";
 
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
+
 type UserRole = "admin" | "gestor" | "corretor" | "vistoriador";
 type UserStatus = "ativo" | "inativo";
 type Usuario = {

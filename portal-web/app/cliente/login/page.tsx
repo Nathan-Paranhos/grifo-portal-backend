@@ -19,7 +19,7 @@ function ClientLoginContent() {
 
   useEffect(() => {
     // Detectar tenant da URL
-    const tenantFromUrl = searchParams.get('tenant');
+    const tenantFromUrl = searchParams.get('tenant') || null;
     if (tenantFromUrl) {
       setTenant(tenantFromUrl);
       // Configurar tenant no serviço de API

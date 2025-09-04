@@ -99,7 +99,15 @@ router.use(
   '/tenants/:tenant/*',
   authSupabase,
   resolveTenant,
-  requireTenantAccess
+  requireTenantAccess,
+  (req, res, next) => {
+    console.log('Processing tenant route', {
+      path: req.path,
+      method: req.method,
+      tenant: req.params.tenant
+    });
+    next();
+  }
 );
 
 // Rotas específicas por tenant
@@ -142,12 +150,17 @@ const legacyRedirect = newPath => (req, res) => {
 };
 
 // Rotas legacy com redirecionamento
-router.use('/companies', legacyRedirect('/companies'));
+// IMPORTANTE: Comentado para evitar conflito com rotas de tenant
+// As rotas de tenant já estão configuradas corretamente acima
+// router.use('/companies', legacyRedirect('/companies'));
 // router.use('/users', legacyRedirect('/users')); // Comentado para permitir rota global /users
-router.use('/properties', legacyRedirect('/properties'));
-router.use('/inspections', legacyRedirect('/inspections'));
+// router.use('/properties', legacyRedirect('/properties'));
+// router.use('/inspections', legacyRedirect('/inspections'));
 
-router.use('/uploads', legacyRedirect('/uploads'));
-router.use('/reports', legacyRedirect('/reports'));
+// router.use('/uploads', legacyRedirect('/uploads'));
+// router.use('/reports', legacyRedirect('/reports'));
+
+// Nota: Se necessário reativar rotas legacy, mover para depois das rotas de tenant
+// ou implementar lógica mais específica para evitar conflitos
 
 module.exports = router;

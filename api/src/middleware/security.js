@@ -7,7 +7,8 @@
  * Middleware para forçar HTTPS em produção
  */
 const enforceHTTPS = (req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
+  // Só aplica redirecionamento HTTPS em produção E quando não for localhost
+  if (process.env.NODE_ENV === 'production' && !req.get('Host')?.includes('localhost')) {
     // Verifica se a requisição não é HTTPS
     if (!req.secure && req.get('X-Forwarded-Proto') !== 'https') {
       // Redireciona para HTTPS

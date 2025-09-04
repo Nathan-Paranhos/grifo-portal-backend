@@ -75,7 +75,7 @@ router.get(
       .select(
         `
         id,
-        name,
+        nome,
         email,
         phone,
         user_type,
@@ -97,11 +97,11 @@ router.get(
       .order('created_at', { ascending: false });
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('ativo', status === 'active');
     }
 
     if (tenant_slug) {
@@ -186,6 +186,16 @@ const userSchemas = {
         message: 'Senhas não coincidem',
         path: ['confirmPassword']
       })
+  },
+  createPortalUser: {
+    body: z.object({
+      nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+      email: commonSchemas.email,
+      password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+      role: z.enum(['admin', 'manager', 'inspector', 'viewer']).default('viewer'),
+      empresa_id: commonSchemas.uuid.optional(),
+      permissions: z.array(z.string()).optional()
+    })
   }
 };
 
@@ -208,14 +218,14 @@ router.get(
   asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, search, status } = req.query;
     const offset = (page - 1) * limit;
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
 
     let query = supabase
       .from('app_users')
       .select(
         `
         id,
-        name,
+        nome,
         email,
         phone,
         status,
@@ -229,11 +239,11 @@ router.get(
       .order('created_at', { ascending: false });
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('ativo', status === 'active');
     }
 
     const { data: users, error, count } = await query;
@@ -349,21 +359,36 @@ router.get(
   authSupabase,
   requireRole(['admin', 'manager']),
   asyncHandler(async (req, res) => {
+    console.log('Portal users endpoint called');
+    console.log('req.user exists:', !!req.user);
+    console.log('req.user content:', req.user);
+    
     const { page = 1, limit = 10, search, role, status } = req.query;
     const offset = (page - 1) * limit;
-    const empresaId = req.user.app_metadata.empresa_id;
+    
+    if (!req.user) {
+      console.log('No req.user found, throwing authentication error');
+      throw new AuthenticationError('Usuário não autenticado');
+    }
+    
+    const empresaId = req.user.empresa_id;
+    console.log('empresaId from req.user:', empresaId);
+    
+    if (!empresaId) {
+      console.log('No empresaId found, throwing authorization error');
+      throw new AuthorizationError('Empresa não identificada para o usuário');
+    }
 
     let query = supabase
       .from('portal_users')
       .select(
         `
         id,
-        name,
+        nome,
         email,
         role,
         permissions,
-        status,
-        phone,
+        ativo,
         last_login,
         created_at
       `,
@@ -374,7 +399,7 @@ router.get(
       .order('created_at', { ascending: false });
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%`);
     }
 
     if (role) {
@@ -382,7 +407,7 @@ router.get(
     }
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('ativo', status === 'active');
     }
 
     const { data: users, error, count } = await query;
@@ -400,6 +425,150 @@ router.get(
         limit: parseInt(limit),
         total: count,
         pages: Math.ceil(count / limit)
+      }
+    });
+  })
+);
+
+/**
+ * @swagger
+ * /api/v1/users/portal:
+ *   post:
+ *     tags: [Users - Portal]
+ *     summary: Criar novo usuário do portal
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *                 description: Nome completo do usuário
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Email do usuário
+ *               password:
+ *                 type: string
+ *                 description: Senha do usuário
+ *               role:
+ *                 type: string
+ *                 enum: [admin, manager, inspector, viewer]
+ *                 description: Papel do usuário
+ *               empresa_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID da empresa
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *       409:
+ *         description: Email já cadastrado
+ */
+router.post(
+  '/portal',
+  authSupabase,
+  requireRole(['admin', 'super_admin']),
+  validateRequest(userSchemas.createPortalUser),
+  asyncHandler(async (req, res) => {
+    const { nome, email, password, role = 'viewer', empresa_id, permissions } = req.body;
+    const userData = req.user;
+
+    console.log('Creating new portal user', {
+      adminId: userData.id,
+      userEmail: email,
+      role
+    });
+
+    // Verificar se o email já existe
+    const { data: existingUser } = await supabase
+      .from('portal_users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      throw new ValidationError('Email já cadastrado');
+    }
+
+    // Usar empresa do usuário logado se não fornecida
+    const finalEmpresaId = empresa_id || userData.empresa_id;
+
+    // Verificar se a empresa existe
+    if (finalEmpresaId) {
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('id')
+        .eq('id', finalEmpresaId)
+        .single();
+
+      if (!empresa) {
+        throw new ValidationError('Empresa não encontrada');
+      }
+    }
+
+    // Criar usuário no Supabase Auth
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        nome,
+        role
+      }
+    });
+
+    if (authError) {
+      console.error('Error creating auth user:', authError);
+      throw new AppError('Erro ao criar usuário de autenticação', 500);
+    }
+
+    // Criar usuário do portal
+    const { data: portalUser, error: portalError } = await supabase
+      .from('portal_users')
+      .insert({
+        auth_user_id: authUser.user.id,
+        nome,
+        email,
+        role,
+        empresa_id: finalEmpresaId,
+        permissions: permissions || [],
+        ativo: true,
+        first_login_completed: false,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (portalError) {
+      // Se falhou ao criar usuário do portal, remover usuário de autenticação
+      await supabase.auth.admin.deleteUser(authUser.user.id);
+      console.error('Error creating portal user:', portalError);
+      throw new AppError('Erro ao criar usuário do portal', 500);
+    }
+
+    console.log('Portal user created successfully', {
+      userId: portalUser.id,
+      createdBy: userData.id
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Usuário criado com sucesso',
+      data: {
+        id: portalUser.id,
+        nome: portalUser.nome,
+        email: portalUser.email,
+        role: portalUser.role,
+        empresa_id: portalUser.empresa_id,
+        ativo: portalUser.ativo,
+        created_at: portalUser.created_at
       }
     });
   })
@@ -456,14 +625,14 @@ router.get(
         .select(
           `
           id,
-          name,
+          nome,
           email,
           phone,
-          status,
+          ativo,
           empresa_id,
           last_login,
           created_at,
-          empresas!inner(name, slug)
+          empresas!inner(nome, slug)
         `
         )
         .eq('id', id)
@@ -477,16 +646,15 @@ router.get(
           .select(
             `
             id,
-            name,
+            nome,
             email,
             role,
             permissions,
-            status,
-            phone,
+            ativo,
             empresa_id,
             last_login,
             created_at,
-            empresas!inner(name, slug)
+            empresas!inner(nome, slug)
           `
           )
           .eq('id', id)
@@ -501,8 +669,8 @@ router.get(
     if (!user && tableName) {
       const selectFields =
         tableName === 'app_users'
-          ? `id, name, email, phone, status, empresa_id, last_login, created_at, empresas!inner(name, slug)`
-          : `id, name, email, role, permissions, status, phone, empresa_id, last_login, created_at, empresas!inner(name, slug)`;
+          ? `id, nome, email, phone, ativo, empresa_id, last_login, created_at, empresas!inner(nome, slug)`
+          : `id, nome, email, role, permissions, ativo, empresa_id, last_login, created_at, empresas!inner(nome, slug)`;
 
       const { data: foundUser, error } = await supabase
         .from(tableName)
@@ -564,88 +732,213 @@ router.put(
     const updateData = req.body;
     const userData = req.user;
 
+    console.log('PUT /users/:id - Starting update process', {
+      userId: id,
+      requestedBy: userData.id,
+      userRole: userData.role,
+      hasCompany: !!req.company,
+      companyId: req.company?.id
+    });
+
     // Users can only update their own data unless they're admin/manager
     const canUpdate =
       userData.id === id ||
       ['admin', 'manager', 'super_admin'].includes(userData.role);
     if (!canUpdate) {
+      console.log('Access denied - insufficient permissions', {
+        userId: id,
+        requestedBy: userData.id,
+        userRole: userData.role
+      });
       throw new AuthorizationError('Acesso negado');
+    }
+
+    // Validate tenant context - mais flexível para diferentes cenários
+    if (!req.company && userData.role !== 'super_admin') {
+      console.log('Missing tenant context for non-super-admin user', {
+        userId: id,
+        requestedBy: userData.id,
+        userRole: userData.role
+      });
+      throw new ValidationError('Contexto de tenant não encontrado');
     }
 
     // Determine which table to update
     let tableName;
     let user;
+    let searchFilters = { id };
+    
+    // Add tenant filtering only if company context exists
+    if (req.company?.id) {
+      searchFilters.empresa_id = req.company.id;
+      console.log('Updating user in tenant context', {
+        userId: id,
+        tenantId: req.company.id,
+        tenantSlug: req.company.slug,
+        updateData: Object.keys(updateData)
+      });
+    } else {
+      console.log('Updating user without tenant context (super_admin)', {
+        userId: id,
+        requestedBy: userData.id,
+        updateData: Object.keys(updateData)
+      });
+    }
 
     // Try app_users first
-    const { data: appUser } = await supabase
-      .from('app_users')
-      .select('id, empresa_id')
-      .eq('id', id)
-      .single();
-
-    if (appUser) {
-      tableName = 'app_users';
-      user = appUser;
-      // Remove role and permissions for app users
-      delete updateData.role;
-      delete updateData.permissions;
-    } else {
-      const { data: portalUser } = await supabase
-        .from('portal_users')
+    try {
+      const appUserQuery = supabase
+        .from('app_users')
         .select('id, empresa_id')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
+      
+      if (searchFilters.empresa_id) {
+        appUserQuery.eq('empresa_id', searchFilters.empresa_id);
+      }
+      
+      const { data: appUser, error: appUserError } = await appUserQuery.single();
 
-      if (portalUser) {
-        tableName = 'portal_users';
-        user = portalUser;
+      if (appUser && !appUserError) {
+        tableName = 'app_users';
+        user = appUser;
+        // Remove role and permissions for app users
+        delete updateData.role;
+        delete updateData.permissions;
+        console.log('User found in app_users table', { userId: id, empresaId: appUser.empresa_id });
+      } else if (appUserError && appUserError.code !== 'PGRST116') {
+        console.error('Error fetching app user:', appUserError);
+        throw new AppError('Erro ao buscar usuário na tabela app_users', 500);
+      }
+    } catch (error) {
+      console.error('Exception while fetching app user:', error);
+      if (error instanceof AppError) throw error;
+    }
+
+    // If not found in app_users, try portal_users
+    if (!user) {
+      try {
+        const portalUserQuery = supabase
+          .from('portal_users')
+          .select('id, empresa_id')
+          .eq('id', id);
+        
+        if (searchFilters.empresa_id) {
+          portalUserQuery.eq('empresa_id', searchFilters.empresa_id);
+        }
+        
+        const { data: portalUser, error: portalUserError } = await portalUserQuery.single();
+
+        if (portalUser && !portalUserError) {
+          tableName = 'portal_users';
+          user = portalUser;
+          console.log('User found in portal_users table', { userId: id, empresaId: portalUser.empresa_id });
+        } else if (portalUserError && portalUserError.code !== 'PGRST116') {
+          console.error('Error fetching portal user:', portalUserError);
+          throw new AppError('Erro ao buscar usuário na tabela portal_users', 500);
+        }
+      } catch (error) {
+        console.error('Exception while fetching portal user:', error);
+        if (error instanceof AppError) throw error;
       }
     }
 
     if (!user) {
-      throw new NotFoundError('Usuário não encontrado');
+      const errorMsg = req.company?.id 
+        ? 'Usuário não encontrado no contexto do tenant'
+        : 'Usuário não encontrado';
+      console.log('User not found', { userId: id, hasCompany: !!req.company });
+      throw new NotFoundError(errorMsg);
     }
 
     // Check tenant access for non-super_admin users
     if (
       userData.role !== 'super_admin' &&
+      req.company?.id &&
       user.empresa_id !== userData.empresa_id
     ) {
-      throw new AuthorizationError('Acesso negado');
+      console.log('Cross-tenant access denied', {
+        userId: id,
+        requestedBy: userData.id,
+        userEmpresaId: user.empresa_id,
+        requestorEmpresaId: userData.empresa_id
+      });
+      throw new AuthorizationError('Acesso negado - usuário de outra empresa');
     }
 
     // Only admins can change roles and status
     if (!['admin', 'super_admin'].includes(userData.role)) {
       delete updateData.role;
       delete updateData.permissions;
-      delete updateData.status;
+      delete updateData.ativo;
+      console.log('Restricted fields removed for non-admin user', {
+        requestedBy: userData.id,
+        userRole: userData.role
+      });
     }
 
-    const { data: updatedUser, error } = await supabase
-      .from(tableName)
-      .update({
-        ...updateData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating user:', error);
-      throw new AppError('Erro ao atualizar usuário', 500);
-    }
-
-    console.log('User updated successfully', {
+    console.log('Attempting to update user', {
       userId: id,
-      updatedBy: userData.id
+      tableName,
+      updateFields: Object.keys(updateData),
+      requestedBy: userData.id
     });
 
-    res.json({
-      success: true,
-      message: 'Usuário atualizado com sucesso',
-      data: updatedUser
-    });
+    try {
+      const { data: updatedUser, error } = await supabase
+        .from(tableName)
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase update error:', {
+          error,
+          userId: id,
+          tableName,
+          updateData: Object.keys(updateData)
+        });
+        throw new AppError(`Erro ao atualizar usuário: ${error.message}`, 500);
+      }
+
+      if (!updatedUser) {
+        console.error('Update returned no data', {
+          userId: id,
+          tableName
+        });
+        throw new AppError('Erro ao atualizar usuário - nenhum dado retornado', 500);
+      }
+
+      console.log('User updated successfully', {
+        userId: id,
+        tableName,
+        updatedBy: userData.id,
+        updatedFields: Object.keys(updateData)
+      });
+
+      res.json({
+        success: true,
+        message: 'Usuário atualizado com sucesso',
+        data: updatedUser
+      });
+    } catch (error) {
+      console.error('Exception during user update:', {
+        error: error.message,
+        stack: error.stack,
+        userId: id,
+        tableName,
+        requestedBy: userData.id
+      });
+      
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      throw new AppError('Erro interno ao atualizar usuário', 500);
+    }
   })
 );
 

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import grifoPortalApiService from '@/lib/api';
 
+// Força renderização dinâmica para esta página
+export const dynamic = 'force-dynamic'
+
 interface InspectionRequest {
   id: string;
   client_id: string;

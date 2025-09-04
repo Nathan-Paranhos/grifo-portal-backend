@@ -75,6 +75,7 @@ router.post(
       // Step 3: Test separate empresas query
       console.log('DEBUG: Step 3 - Testing separate empresas query');
       const empresaStart = Date.now();
+      let empresaEnd = Date.now();
       
       let empresaData = null;
       if (portalUser.empresa_id) {
@@ -84,7 +85,7 @@ router.post(
           .eq('id', portalUser.empresa_id)
           .single();
         
-        const empresaEnd = Date.now();
+        empresaEnd = Date.now();
         console.log('DEBUG: Empresas query completed', { 
           duration: empresaEnd - empresaStart,
           success: !empresaError,
@@ -92,6 +93,8 @@ router.post(
         });
         
         empresaData = empresa;
+      } else {
+        console.log('DEBUG: No empresa_id, skipping empresas query');
       }
 
       const totalEnd = Date.now();
@@ -107,7 +110,7 @@ router.post(
           steps: {
             auth: authEnd - authStart,
             userQuery: queryEnd - queryStart,
-            empresaQuery: empresaData ? (empresaEnd - empresaStart) : 0
+            empresaQuery: portalUser.empresa_id ? (empresaEnd - empresaStart) : 0
           }
         },
         data: {
@@ -699,31 +702,50 @@ router.post(
     //   );
     // }
 
-    // Update user app_metadata with company info (temporarily disabled for debugging)
-    // const { error: updateError } = await supabase.auth.admin.updateUserById(
-    //   authData.user.id,
-    //   {
-    //     app_metadata: {
-    //       ...authData.user.app_metadata,
-    //       user_type: 'portal_user',
-    //       user_id: portalUser.id,
-    //       empresa_id: portalUser.empresa_id,
-    //       empresa_slug: 'default',
-    //       role: portalUser.role,
-    //       nome: portalUser.nome,
-    //       permissions: portalUser.permissions || []
-    //     }
-    //   }
-    // );
+    // Update user app_metadata with company info
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      authData.user.id,
+      {
+        app_metadata: {
+          ...authData.user.app_metadata,
+          user_type: 'portal_user',
+          user_id: portalUser.id,
+          empresa_id: portalUser.empresa_id,
+          empresa_slug: 'default',
+          role: portalUser.role,
+          nome: portalUser.nome,
+          permissions: portalUser.permissions || []
+        }
+      }
+    );
 
-    // if (updateError) {
-    //   console.log('Failed to update user metadata', {
-    //     userId: portalUser.id,
-    //     error: updateError.message
-    //   });
-    // }
-    
-    console.log('Skipping metadata update for debugging');
+    if (updateError) {
+      console.log('Failed to update user metadata', {
+        userId: portalUser.id,
+        error: updateError.message
+      });
+    } else {
+      console.log('User metadata updated successfully', {
+        userId: portalUser.id,
+        user_type: 'portal_user'
+      });
+    }
+
+    // Refresh the session to get updated token with new app_metadata
+    const { data: refreshedAuth, error: refreshError } = await supabase.auth.refreshSession({
+      refresh_token: authData.session.refresh_token
+    });
+
+    if (refreshError) {
+      console.log('Failed to refresh session after metadata update', {
+        error: refreshError.message
+      });
+      // Continue with original token if refresh fails
+    } else {
+      console.log('Session refreshed successfully with updated metadata');
+      // Use the refreshed token
+      authData.session = refreshedAuth.session;
+    }
 
     // Update last login
     await supabase
@@ -804,94 +826,7 @@ router.post(
   })
 );
 
-/**
- * @swagger
- * /api/v1/auth/me:
- *   get:
- *     tags: [Authentication]
- *     summary: Obter dados do usuário atual
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Dados do usuário
- */
-router.get(
-  '/me',
-  authSupabase,
-  asyncHandler(async (req, res) => {
-    const user = req.user;
-    const userType = req.userType;
-
-    let userData;
-
-    if (userType === 'app_user') {
-      const { data: appUser, error } = await supabase
-        .from('app_users')
-        .select(
-          `
-          id,
-          name,
-          email,
-          phone,
-          status,
-          empresa_id,
-          empresas!inner(
-            id,
-            name
-          )
-        `
-        )
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (error || !appUser) {
-        throw new NotFoundError('Usuário não encontrado');
-      }
-
-      userData = {
-        ...appUser,
-        user_type: 'app_user',
-        company: appUser.empresas
-      };
-      delete userData.empresas;
-    } else {
-      const { data: portalUser, error } = await supabase
-        .from('portal_users')
-        .select(
-          `
-          id,
-          nome,
-          email,
-          role,
-          empresa_id,
-          empresas!inner(
-            id,
-            nome
-          )
-        `
-        )
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (error || !portalUser) {
-        throw new NotFoundError('Usuário não encontrado');
-      }
-
-      userData = {
-        ...portalUser,
-        user_type: 'portal_user',
-        company: portalUser.empresas
-      };
-      delete userData.empresas;
-    }
-
-    res.json({
-      success: true,
-      data: userData
-    });
-  })
-);
+// Endpoint /me removido - implementação duplicada
 
 /**
  * @swagger
@@ -1144,19 +1079,145 @@ router.get(
       throw new AuthenticationError('Usuário não autenticado');
     }
 
-    // Return user data from the auth middleware
+
+
+    const userType = user.user_type || 'portal_user';
+    let userData;
+
+    if (userType === 'app_user') {
+      // Buscar por auth_user_id primeiro, depois por email se não encontrar
+      let { data: appUser, error } = await supabase
+        .from('app_users')
+        .select(
+          `
+          id,
+          nome,
+          email,
+          phone,
+          status,
+          empresa_id,
+          empresas(
+            id,
+            nome
+          )
+        `
+        )
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (error || !appUser) {
+        // Tentar buscar por email se não encontrou por auth_user_id
+        const result = await supabase
+          .from('app_users')
+          .select(
+            `
+            id,
+            nome,
+            email,
+            phone,
+            status,
+            empresa_id,
+            empresas(
+              id,
+              nome
+            )
+          `
+          )
+          .eq('email', user.email)
+          .single();
+        
+        appUser = result.data;
+        error = result.error;
+      }
+
+      if (error || !appUser) {
+        throw new NotFoundError('Usuário não encontrado');
+      }
+
+      userData = {
+        id: appUser.id,
+        name: appUser.nome,
+        email: appUser.email,
+        phone: appUser.phone,
+        status: appUser.status,
+        user_type: 'app_user',
+        company: appUser.empresas ? {
+          id: appUser.empresas.id,
+          name: appUser.empresas.nome
+        } : null
+      };
+    } else {
+      // Buscar por auth_user_id primeiro, depois por email se não encontrar
+      let { data: portalUser, error } = await supabase
+        .from('portal_users')
+        .select(
+          `
+          id,
+          nome,
+          email,
+          role,
+          permissions,
+          empresa_id,
+          empresas(
+            id,
+            nome
+          )
+        `
+        )
+        .eq('auth_user_id', user.id)
+        .single();
+
+
+
+      if (error || !portalUser) {
+         // Tentar buscar por email se não encontrou por auth_user_id
+        const result = await supabase
+          .from('portal_users')
+          .select(
+            `
+            id,
+            nome,
+            email,
+            role,
+            permissions,
+            empresa_id,
+            empresas(
+              id,
+              nome
+            )
+          `
+          )
+          .eq('email', user.email)
+          .single();
+        
+
+        
+        portalUser = result.data;
+        error = result.error;
+      }
+
+      if (error || !portalUser) {
+        throw new NotFoundError('Usuário não encontrado');
+      }
+
+      userData = {
+        id: portalUser.id,
+        name: portalUser.nome,
+        email: portalUser.email,
+        role: portalUser.role,
+        permissions: portalUser.permissions || {},
+        user_type: 'portal_user',
+        company: portalUser.empresas ? {
+          id: portalUser.empresas.id,
+          name: portalUser.empresas.nome
+        } : null
+      };
+    }
+
     res.json({
       success: true,
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name || user.nome,
-          role: user.role,
-          user_type: user.user_type,
-          tenant_slug: user.tenant_slug,
-          auth_user_id: user.auth_user_id
-        }
+        user: userData
       }
     });
   })

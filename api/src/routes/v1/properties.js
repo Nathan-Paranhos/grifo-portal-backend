@@ -695,7 +695,7 @@ router.get(
   '/stats',
   authSupabase,
   asyncHandler(async (req, res) => {
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
 
     // Get various stats in parallel
     const [totalResult, activeResult, typeStatsResult, cityStatsResult] =

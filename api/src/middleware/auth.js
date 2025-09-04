@@ -67,17 +67,69 @@ const authSupabase = asyncHandler(async (req, res, next) => {
 
     const claims = user.app_metadata || {};
 
+    // Debug: Log do app_metadata
+    console.log('User app_metadata:', user.app_metadata);
+    console.log('Claims extracted:', claims);
+
+    // Se não temos empresa_id no token, buscar do banco de dados
+    let empresaId = claims.empresa_id;
+    let userType = claims.user_type;
+    let userId = claims.user_id;
+    let role = claims.role;
+    let nome = claims.nome;
+    let permissions = claims.permissions || [];
+
+    console.log('Initial values from token:', {
+      empresaId,
+      userType,
+      userId,
+      role,
+      nome,
+      permissions
+    });
+
+    if (!empresaId || !userType) {
+      console.log('Missing empresa_id or user_type in token, fetching from database for email:', user.email);
+      try {
+        const { data: portalUser, error: dbError } = await supabase
+          .from('portal_users')
+          .select('id, empresa_id, role, nome, permissions')
+          .eq('email', user.email)
+          .single();
+
+        console.log('Database query result:', { portalUser, dbError });
+
+        if (portalUser) {
+          empresaId = portalUser.empresa_id;
+          userType = 'portal_user';
+          userId = portalUser.id;
+          role = portalUser.role;
+          nome = portalUser.nome;
+          permissions = portalUser.permissions || [];
+          console.log('User data fetched from database:', {
+            userId: portalUser.id,
+            empresaId: portalUser.empresa_id,
+            role: portalUser.role
+          });
+        } else {
+          console.log('No portal user found in database for email:', user.email);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data from database:', error.message);
+      }
+    }
+
     req.user = {
       id: user.id,
       email: user.email,
       supabase_user: user,
-      user_type: claims.user_type || 'unknown',
-      user_id: claims.user_id,
-      empresa_id: claims.empresa_id,
-      empresa_slug: claims.empresa_slug,
-      role: claims.role,
-      nome: claims.nome,
-      permissions: claims.permissions || [],
+      user_type: userType || 'unknown',
+      user_id: userId,
+      empresa_id: empresaId,
+      empresa_slug: claims.empresa_slug || 'default',
+      role: role,
+      nome: nome,
+      permissions: permissions,
       isAnonymous: false
     };
 

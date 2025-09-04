@@ -470,6 +470,23 @@ class GrifoPortalApiService {
     return this.makeRequest<Inspection>(`${this.getTenantPath()}/inspections/${id}`);
   }
 
+  async uploadInspectionPhotos(inspectionId: string, formData: FormData): Promise<ApiResponse<{ photos: any[] }>> {
+    return this.makeRequest<{ photos: any[] }>(`${this.getTenantPath()}/inspections/${inspectionId}/photos`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Remove Content-Type para permitir multipart/form-data
+        'Authorization': this.authToken ? `Bearer ${this.authToken}` : ''
+      }
+    });
+  }
+
+  async deleteInspectionPhoto(inspectionId: string, photoId: string): Promise<ApiResponse<void>> {
+    return this.makeRequest<void>(`${this.getTenantPath()}/inspections/${inspectionId}/photos/${photoId}`, {
+      method: 'DELETE'
+    });
+  }
+
 
 
   // Relatórios e estatísticas

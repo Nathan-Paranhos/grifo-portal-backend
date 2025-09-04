@@ -158,7 +158,7 @@ router.post(
       is_public: isPublic = false
     } = req.body;
     const files = req.files;
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
     const userId = req.user.id;
     const userType = req.userType;
 
@@ -362,7 +362,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const { context, context_id: contextId, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
     const userId = req.user.id;
     const userType = req.userType;
     const userData = req.user;
@@ -459,7 +459,7 @@ router.get(
   validateRequest(uploadSchemas.getFile),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const empresaId = req.user.app_metadata.empresa_id;
+    const empresaId = req.user.empresa_id;
     const userId = req.user.id;
     const userType = req.userType;
     const userData = req.user;
@@ -544,9 +544,9 @@ router.put(
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
-    const empresaId = req.user.app_metadata.empresa_id;
-    const userId = req.user.id;
-    const userType = req.userType;
+    const empresaId = req.user.empresa_id;
+      const userId = req.user.id;
+      const userType = req.userType;
     const userData = req.user;
 
     // Get current upload
@@ -628,8 +628,8 @@ router.delete(
   validateRequest(uploadSchemas.deleteFile),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const empresaId = req.user.app_metadata.empresa_id;
-    const userId = req.user.id;
+    const empresaId = req.user.empresa_id;
+      const userId = req.user.id;
     const userType = req.userType;
     const userData = req.user;
 
@@ -709,10 +709,10 @@ router.get(
   '/stats',
   authSupabase,
   asyncHandler(async (req, res) => {
-    const empresaId = req.user.app_metadata.empresa_id;
-    const userId = req.user.id;
-    const userType = req.userType;
-    const userData = req.user;
+    const empresaId = req.user.empresa_id;
+      const userId = req.user.id;
+      const userType = req.userType;
+      const userData = req.user;
 
     let baseQuery = supabase
       .from('uploads')
