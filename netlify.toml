@@ -2,11 +2,11 @@
   # Diretório base onde está o projeto Next.js
   base = "portal-web/portal-web"
   
-  # Comando de build com instalação de dependências e limpeza de cache
+  # Comando de build com limpeza completa e reinstalação forçada
   command = "npm cache clean --force && rm -rf node_modules package-lock.json .next && npm install --no-optional && npm run build"
   
-  # Diretório de publicação (Next.js SSR)
-  publish = ".next"
+  # Diretório de publicação (Next.js export estático)
+  publish = "out"
 
 # Plugin do Next.js removido para export estático
 
