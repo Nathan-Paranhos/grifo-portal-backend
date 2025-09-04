@@ -2,8 +2,8 @@
   # Diretório base onde está o projeto Next.js
   base = "portal-web/portal-web"
   
-  # Comando de build com instalação de dependências
-  command = "npm ci && npm run build"
+  # Comando de build com instalação de dependências e limpeza de cache
+  command = "npm cache clean --force && rm -rf node_modules package-lock.json && npm install && npm run build"
   
   # Diretório de publicação (Next.js SSR)
   publish = ".next"
