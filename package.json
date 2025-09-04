@@ -10,7 +10,7 @@
     "build:api": "cd api && npm run build",
     "build:portal": "cd portal-web && npm run build",
     "build:mobile": "cd app-mobile && npm run build",
-    "build": "cd portal-web && npm run build",
+    "build": "cd portal-web && npm run build && npm run export",
     "start": "cd portal-web && npm run start"
   },
   "keywords": [

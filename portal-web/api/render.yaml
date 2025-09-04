@@ -1,0 +1,344 @@
+# Render Blueprint for Grifo API Backend
+# This file defines the infrastructure and deployment configuration for Render
+
+services:
+  # Main API Service
+  - type: web
+    name: grifo-api-backend
+    runtime: node
+    plan: starter # Can be upgraded to standard/pro as needed
+    region: oregon # Choose region closest to your users
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    branch: main # Deploy from main branch
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      
+      - key: PORT
+        value: 3000
+      
+      - key: JWT_SECRET
+        generateValue: true # Render will generate a secure random value
+      
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      
+      - key: CORS_ORIGIN
+        value: "*" # Update with your frontend domain in production
+      
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000" # 15 minutes
+      
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      
+      - key: LOG_LEVEL
+        value: "info"
+      
+      - key: LOG_FORMAT
+        value: "json"
+      
+      # Supabase Configuration
+      - key: SUPABASE_URL
+        value: https://fsvwifbvehdhlufauahj.supabase.co
+      
+      - key: SUPABASE_ANON_KEY
+        sync: false # Set manually in dashboard for security
+      
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Set manually in dashboard for security
+      
+      # Optional: Database URL if using external database
+      # - key: DATABASE_URL
+      #   sync: false
+      
+      # Optional: Redis URL for caching/sessions
+      # - key: REDIS_URL
+      #   sync: false
+      
+      # Optional: Email service configuration
+      # - key: SMTP_HOST
+      #   sync: false
+      # - key: SMTP_PORT
+      #   value: "587"
+      # - key: SMTP_USER
+      #   sync: false
+      # - key: SMTP_PASS
+      #   sync: false
+      
+      # Optional: File upload configuration
+      - key: MAX_FILE_SIZE
+        value: "10485760" # 10MB
+      
+      - key: MAX_FILES_PER_REQUEST
+        value: "10"
+      
+      # Optional: API versioning
+      - key: API_VERSION
+        value: "v1"
+      
+      # Optional: Feature flags
+      - key: ENABLE_SWAGGER
+        value: "true"
+      
+      - key: ENABLE_METRICS
+        value: "true"
+      
+      # Build information (automatically set by Render)
+      - key: RENDER_SERVICE_ID
+        sync: false
+      
+      - key: RENDER_SERVICE_NAME
+        sync: false
+    
+    # Disk storage for logs (optional)
+    disk:
+      name: grifo-logs
+      mountPath: /app/logs
+      sizeGB: 1
+    
+    # Health check configuration
+    healthCheck:
+      path: /api/v1/health
+      initialDelaySeconds: 45
+      periodSeconds: 15
+      timeoutSeconds: 10
+      failureThreshold: 3
+    
+    # Resource limits
+    scaling:
+      minInstances: 1
+      maxInstances: 3 # Auto-scale based on traffic
+      targetCPUPercent: 70
+      targetMemoryPercent: 80
+
+# Optional: Background worker service
+# - type: worker
+#   name: grifo-worker
+#   runtime: node
+#   plan: starter
+#   buildCommand: npm ci
+#   startCommand: npm run worker
+#   envVars:
+#     - key: NODE_ENV
+#       value: production
+#     # ... other environment variables
+
+# Optional: Cron jobs
+# - type: cron
+#   name: grifo-cleanup
+#   runtime: node
+#   plan: starter
+#   schedule: "0 2 * * *" # Daily at 2 AM
+#   buildCommand: npm ci
+#   startCommand: npm run cleanup
+#   envVars:
+#     - key: NODE_ENV
+#       value: production
+#     # ... other environment variables
+
+# Optional: Redis instance for caching
+# databases:
+#   - name: grifo-redis
+#     plan: starter
+#     region: oregon
+
+# Optional: PostgreSQL database (if not using Supabase)
+# - name: grifo-postgres
+#   plan: starter
+#   region: oregon
+#   databaseName: grifo
+#   user: grifo_user
+
+# Static site for documentation (optional)
+# - type: static
+#   name: grifo-docs
+#   buildCommand: npm run build:docs
+#   staticPublishPath: ./docs/build
+#   envVars:
+#     - key: NODE_ENV
+#       value: production
+
+# Notification settings
+notifications:
+  - type: email
+    emails:
+      - your-email@example.com # Update with your email
+    events:
+      - deploy-failed
+      - deploy-succeeded
+      - service-suspended
+
+# Custom domains (configure in Render dashboard)
+# domains:
+#   - name: api.grifo.com
+#     type: apex
+#   - name: www.api.grifo.com
+#     type: www
+
+# Preview environments for pull requests
+previewsEnabled: true
+previewsExpireAfterDays: 7
+
+# Build settings
+buildFilter:
+  paths:
+    - api/**
+  ignoredPaths:
+    - "*.md"
+    - "docs/**"
+    - "tests/**"
+    - "*.log"
+    - ".env*"
+    - .github/**
+
+# Monitoring and alerting
+monitoring:
+  enabled: true
+  alerts:
+    - type: cpu
+      threshold: 80
+      duration: 300 # 5 minutes
+    - type: memory
+      threshold: 85
+      duration: 300
+    - type: response_time
+      threshold: 2000 # 2 seconds
+      duration: 300
+
+# Backup settings (for databases)
+# backups:
+#   - name: daily-backup
+#     schedule: "0 3 * * *" # Daily at 3 AM
+#     retention: 7 # Keep for 7 days
+
+# Security settings
+security:
+  allowedIPs: [] # Empty means allow all IPs
+  # allowedIPs:
+  #   - "192.168.1.0/24"
+  #   - "10.0.0.0/8"
+  
+  headers:
+    - name: "Strict-Transport-Security"
+      value: "max-age=31536000; includeSubDomains"
+    - name: "X-Content-Type-Options"
+      value: "nosniff"
+    - name: "X-Frame-Options"
+      value: "DENY"
+    - name: "X-XSS-Protection"
+      value: "1; mode=block"
+    - name: "Referrer-Policy"
+      value: "strict-origin-when-cross-origin"
+
+# Logging configuration
+logging:
+  level: info
+  format: json
+  retention: 7 # days
+
+# Performance settings
+performance:
+  compression: true
+  caching:
+    enabled: true
+    maxAge: 3600 # 1 hour
+  
+  # CDN settings (if using Render's CDN)
+  cdn:
+    enabled: false # Enable if serving static assets
+    cacheControl: "public, max-age=31536000"
+
+# Development settings
+development:
+  # Environment for preview deployments
+  previewEnvVars:
+    - key: NODE_ENV
+      value: staging
+    - key: LOG_LEVEL
+      value: debug
+    - key: ENABLE_SWAGGER
+      value: "true"
+
+# Maintenance mode
+maintenance:
+  enabled: false
+  message: "API is currently under maintenance. Please try again later."
+  allowedIPs: []
+  # allowedIPs:
+  #   - "192.168.1.100" # Your IP for testing during maintenance
+
+# Custom build hooks
+buildHooks:
+  preInstall: |
+    echo "Starting Grifo API build..."
+    echo "Node version: $(node --version)"
+    echo "NPM version: $(npm --version)"
+  
+  postInstall: |
+    echo "Dependencies installed successfully"
+    npm audit --audit-level moderate
+  
+  preBuild: |
+    echo "Running pre-build checks..."
+    npm run lint || echo "Linting warnings found"
+  
+  postBuild: |
+    echo "Build completed successfully"
+    echo "Build timestamp: $(date)"
+
+# Deployment strategy
+deployment:
+  strategy: rolling # or blue-green
+  maxUnavailable: 0 # Zero-downtime deployment
+  healthCheckGracePeriod: 60 # seconds
+  
+  # Rollback settings
+  rollback:
+    enabled: true
+    automatic: true
+    healthCheckFailureThreshold: 3
+
+# Resource quotas
+resources:
+  requests:
+    cpu: "0.1" # 100m CPU
+    memory: "256Mi"
+  limits:
+    cpu: "1" # 1 CPU core
+    memory: "512Mi"
+
+# Auto-scaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: cpu
+      target: 70
+    - type: memory
+      target: 80
+    - type: requests_per_second
+      target: 100
+
+# Service mesh configuration (advanced)
+# serviceMesh:
+#   enabled: false
+#   type: istio
+#   configuration:
+#     timeout: 30s
+#     retries: 3
+#     circuitBreaker:
+#       enabled: true
+#       threshold: 5
+#       timeout: 60s
