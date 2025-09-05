@@ -73,6 +73,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background-color: hsl(var(--background));
   }
 }
