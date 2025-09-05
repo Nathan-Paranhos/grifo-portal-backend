@@ -136,7 +136,7 @@ export default function NovaVistoriaModal({ isOpen, onClose, onSuccess }: NovaVi
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-background rounded-lg border border-gray-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Nova Vistoria</h2>
@@ -258,7 +258,7 @@ export default function NovaVistoriaModal({ isOpen, onClose, onSuccess }: NovaVi
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="flex-1 h-10 px-4 rounded-md border border-border hover:bg-muted/30"
+                  className="flex-1 h-10 px-4 rounded-md border border-gray-200 hover:bg-muted/30"
                 >
                   Cancelar
                 </button>

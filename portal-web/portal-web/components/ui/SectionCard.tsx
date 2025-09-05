@@ -10,7 +10,7 @@ type Props = {
 
 export default function SectionCard({ title, subtitle, actions, children, className }: Props) {
   return (
-    <section className={`rounded-xl border border-border p-4 bg-card/60 ${className ?? ""}`}>
+    <section className={`rounded-xl border border-gray-200 p-4 bg-card/60 ${className ?? ""}`}>
       <div className="flex items-center justify-between gap-2">
         <div>
           <h3 className="font-medium leading-tight">{title}</h3>

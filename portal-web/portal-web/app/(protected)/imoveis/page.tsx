@@ -250,7 +250,7 @@ export default function ImoveisPage() {
           <p className="text-sm text-muted-foreground">{loading ? 'Carregando...' : 'UI de lista e cadastro'}</p>
         </div>
         <Tooltip content="Criar novo imóvel">
-          <button onClick={openCreate} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-muted/30">
+          <button onClick={openCreate} className="h-9 rounded-md border border-gray-200 px-3 text-sm hover:bg-muted/30">
             Novo imóvel
           </button>
         </Tooltip>
@@ -333,7 +333,7 @@ export default function ImoveisPage() {
             />
             <svg aria-hidden className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a6 6 0 104.472 10.028l4.75 4.75 1.414-1.414-4.75-4.75A6 6 0 0010 4zm-4 6a4 4 0 118 0 4 4 0 01-8 0z"/></svg>
           </div>
-          <button onClick={() => setFiltersOpen(true)} className="h-9 px-3 rounded-md border border-border bg-card hover:bg-muted/30 text-sm" aria-haspopup="dialog" aria-expanded={filtersOpen} aria-controls="mobile-filters-sheet">
+          <button onClick={() => setFiltersOpen(true)} className="h-9 px-3 rounded-md border border-gray-200 bg-card hover:bg-muted/30 text-sm" aria-haspopup="dialog" aria-expanded={filtersOpen} aria-controls="mobile-filters-sheet">
             Filtros{(tipo !== "todos" || status !== "todos") && <span className="ml-1 inline-block h-2 w-2 rounded-full bg-primary align-middle" aria-hidden></span>}
           </button>
         </div>
@@ -345,7 +345,7 @@ export default function ImoveisPage() {
         <div className="md:hidden">
           <ul role="list" className="space-y-2">
             {pageItems.map((im) => (
-              <li key={im.id} className="rounded-lg border border-border bg-card p-3">
+              <li key={im.id} className="rounded-lg border border-gray-200 bg-card p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-2">
@@ -357,19 +357,19 @@ export default function ImoveisPage() {
                   <div className="shrink-0">{statusBadge(im.status)}</div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-md border border-border/60 px-2 py-1">
+                  <div className="rounded-md border border-gray-200/60 px-2 py-1">
                     <div className="text-muted-foreground">Tipo</div>
                     <div className="capitalize">{im.tipo}</div>
                   </div>
-                  <div className="rounded-md border border-border/60 px-2 py-1">
+                  <div className="rounded-md border border-gray-200/60 px-2 py-1">
                     <div className="text-muted-foreground">Quartos</div>
                     <div>{im.quartos}</div>
                   </div>
-                  <div className="rounded-md border border-border/60 px-2 py-1">
+                  <div className="rounded-md border border-gray-200/60 px-2 py-1">
                     <div className="text-muted-foreground">Área (m²)</div>
                     <div>{im.area_m2}</div>
                   </div>
-                  <div className="rounded-md border border-border/60 px-2 py-1">
+                  <div className="rounded-md border border-gray-200/60 px-2 py-1">
                     <div className="text-muted-foreground">Valor (R$)</div>
                     <div>{im.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</div>
                   </div>
@@ -378,7 +378,7 @@ export default function ImoveisPage() {
                   <button
                     aria-label={`Editar imóvel ${im.titulo}`}
                     onClick={() => openEdit(im)}
-                    className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30 text-xs"
+                    className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30 text-xs"
                   >
                     Editar
                   </button>
@@ -393,7 +393,7 @@ export default function ImoveisPage() {
               </li>
             ))}
             {pageItems.length === 0 && (
-              <li className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground" aria-live="polite">
+              <li className="rounded-lg border border-gray-200 bg-card p-6 text-center text-sm text-muted-foreground" aria-live="polite">
                 Nenhum resultado para os filtros atuais.
               </li>
             )}
@@ -401,7 +401,7 @@ export default function ImoveisPage() {
         </div>
 
         {/* Table (md+) */}
-        <div className="hidden md:block overflow-auto rounded-lg border border-border">
+        <div className="hidden md:block overflow-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b bg-card/95 text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-card/70">
               <tr>
@@ -428,7 +428,7 @@ export default function ImoveisPage() {
             </thead>
             <tbody>
               {pageItems.map((im) => (
-                <tr key={im.id} className="border-t border-border odd:bg-background even:bg-muted/5 hover:bg-muted/20">
+                <tr key={im.id} className="border-t border-gray-200 odd:bg-background even:bg-muted/5 hover:bg-muted/20">
                   <td className="px-3 py-2">
                     <div className="font-medium">{im.titulo}</div>
                     <div className="text-muted-foreground text-xs">{im.endereco}</div>
@@ -440,7 +440,7 @@ export default function ImoveisPage() {
                   <td className="px-3 py-2">{im.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2">
-                      <button aria-label={`Editar imóvel ${im.titulo}`} onClick={() => openEdit(im)} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30">Editar</button>
+                      <button aria-label={`Editar imóvel ${im.titulo}`} onClick={() => openEdit(im)} className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30">Editar</button>
                       <button aria-label={`Excluir imóvel ${im.titulo}`} onClick={() => askRemove(im)} className="px-2 py-1.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10">Excluir</button>
                     </div>
                   </td>
@@ -458,8 +458,8 @@ export default function ImoveisPage() {
         <div className="mt-3 flex items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</div>
           <div className="flex gap-2">
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
           </div>
         </div>
       </SectionCard>
@@ -467,7 +467,7 @@ export default function ImoveisPage() {
       {/* Mobile Filters Modal (Bottom Sheet) */}
       {filtersOpen && (
         <div className="fixed inset-0 z-50 grid place-items-end bg-black/50" role="dialog" aria-modal="true" aria-labelledby="mobile-filters-title" id="mobile-filters-sheet" onClick={() => setFiltersOpen(false)}>
-          <div className="w-full rounded-t-2xl border border-border bg-card p-4 shadow-xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full rounded-t-2xl border border-gray-200 bg-card p-4 shadow-xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 id="mobile-filters-title" className="text-base font-semibold">Filtros</h3>
@@ -524,7 +524,7 @@ export default function ImoveisPage() {
                 </div>
               </div>
               <div className="mt-2 flex justify-between">
-                <button className="px-3 py-2 rounded-md border border-border text-sm" onClick={() => { setQuery(""); setTipo("todos"); setStatus("todos"); setPage(1); setFiltersOpen(false); }}>Limpar</button>
+                <button className="px-3 py-2 rounded-md border border-gray-200 text-sm" onClick={() => { setQuery(""); setTipo("todos"); setStatus("todos"); setPage(1); setFiltersOpen(false); }}>Limpar</button>
                 <button className="px-3 py-2 rounded-md bg-primary text-primary-foreground text-sm" onClick={() => { setPage(1); setFiltersOpen(false); }}>Aplicar</button>
               </div>
             </div>
@@ -535,7 +535,7 @@ export default function ImoveisPage() {
       {/* Modal simples para criar/editar */}
       {isOpen && editing && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={closeModal} role="dialog" aria-modal="true" aria-labelledby="dialog-imoveis-title">
-          <div className="w-full max-w-lg rounded-xl border border-border bg-card p-4 shadow-[0_0_12px_#0006]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-card p-4 shadow-[0_0_12px_#0006]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 id="dialog-imoveis-title" className="text-lg font-medium">{editing.id ? "Editar imóvel" : "Novo imóvel"}</h3>
               <button className="text-sm text-muted-foreground hover:opacity-80" onClick={closeModal}>Fechar</button>
@@ -581,7 +581,7 @@ export default function ImoveisPage() {
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={closeModal}>Cancelar</button>
+              <button className="px-3 py-2 rounded-md border border-gray-200" onClick={closeModal}>Cancelar</button>
               <button className="px-3 py-2 rounded-md bg-primary text-primary-foreground" onClick={saveItem}>Salvar</button>
             </div>
           </div>
@@ -590,11 +590,11 @@ export default function ImoveisPage() {
 
       {toDelete && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={cancelRemove} role="dialog" aria-modal="true" aria-labelledby="dialog-imoveis-remove-title">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-card p-4" onClick={(e) => e.stopPropagation()}>
             <h3 id="dialog-imoveis-remove-title" className="text-lg font-medium mb-2">Confirmar exclusão</h3>
             <p className="text-sm text-muted-foreground mb-4">Tem certeza que deseja excluir &quot;{toDelete.titulo}&quot;?</p>
             <div className="flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={cancelRemove}>Cancelar</button>
+              <button className="px-3 py-2 rounded-md border border-gray-200" onClick={cancelRemove}>Cancelar</button>
               <button className="px-3 py-2 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" onClick={confirmRemove}>Excluir</button>
             </div>
           </div>

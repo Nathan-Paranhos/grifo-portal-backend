@@ -117,7 +117,7 @@ export default function UsagePage() {
           <p className="text-sm text-muted-foreground">{loading ? 'Carregando...' : 'Relatórios e estatísticas'}</p>
         </div>
         <Tooltip content="Exportar CSV">
-          <button onClick={exportCSV} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-muted/30">Exportar CSV</button>
+          <button onClick={exportCSV} className="h-9 rounded-md border border-gray-200 px-3 text-sm hover:bg-muted/30">Exportar CSV</button>
         </Tooltip>
       </div>
 
@@ -159,7 +159,7 @@ export default function UsagePage() {
         {/* Mobile: cards */}
         <div className="md:hidden space-y-2" role="list" aria-label="Registros de uso (lista)">
           {rows.map((r) => (
-            <div key={r.id} role="listitem" className="rounded-lg border border-border bg-card/50 p-3">
+            <div key={r.id} role="listitem" className="rounded-lg border border-gray-200 bg-card/50 p-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-xs text-muted-foreground">Data</div>
@@ -187,12 +187,12 @@ export default function UsagePage() {
             </div>
           ))}
           {rows.length === 0 && (
-            <div className="rounded-lg border border-border p-6 text-center text-muted-foreground">Sem dados para os filtros atuais.</div>
+            <div className="rounded-lg border border-gray-200 p-6 text-center text-muted-foreground">Sem dados para os filtros atuais.</div>
           )}
         </div>
 
         {/* Desktop: tabela */}
-        <div className="hidden md:block overflow-auto rounded-lg border border-border">
+        <div className="hidden md:block overflow-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
             <colgroup>
               <col className="w-[120px] bg-muted/20" />
@@ -204,20 +204,20 @@ export default function UsagePage() {
             <thead className="sticky top-0 z-10 border-b bg-card/95 text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-card/70">
               <tr>
                 <th scope="col" className="text-left font-medium px-3 py-2.5">Data</th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-border/60">Módulo</th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-border/60">Ação</th>
-                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-border/60">Empresa</th>
-                <th scope="col" className="text-right font-medium px-3 py-2.5 border-l border-border/60">Qtd</th>
+                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-gray-200/60">Módulo</th>
+                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-gray-200/60">Ação</th>
+                <th scope="col" className="text-left font-medium px-3 py-2.5 border-l border-gray-200/60">Empresa</th>
+                <th scope="col" className="text-right font-medium px-3 py-2.5 border-l border-gray-200/60">Qtd</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-border odd:bg-background even:bg-muted/5 hover:bg-muted/20">
+                <tr key={r.id} className="border-t border-gray-200 odd:bg-background even:bg-muted/5 hover:bg-muted/20">
                   <td className="px-3 py-2 font-mono tabular-nums">{new Date(r.data).toLocaleDateString("pt-BR")}</td>
-                  <td className="px-3 py-2 capitalize border-l border-border/60">{r.modulo}</td>
-                  <td className="px-3 py-2 border-l border-border/60">{r.acao}</td>
-                  <td className="px-3 py-2 border-l border-border/60">{r.empresa}</td>
-                  <td className="px-3 py-2 text-right font-mono tabular-nums border-l border-border/60">{r.quantidade}</td>
+                  <td className="px-3 py-2 capitalize border-l border-gray-200/60">{r.modulo}</td>
+                  <td className="px-3 py-2 border-l border-gray-200/60">{r.acao}</td>
+                  <td className="px-3 py-2 border-l border-gray-200/60">{r.empresa}</td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums border-l border-gray-200/60">{r.quantidade}</td>
                 </tr>
               ))}
               {rows.length === 0 && (
@@ -232,8 +232,8 @@ export default function UsagePage() {
         <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-sm text-muted-foreground">Página {current} de {totalPages}</div>
           <div className="flex gap-2 self-end sm:self-auto">
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={current <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={current >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={current <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={current >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
           </div>
         </div>
       </SectionCard>

@@ -264,7 +264,7 @@ export default function VistoriasPage() {
         </div>
         <Tooltip content="Criar nova vistoria">
           <button
-            className="h-9 inline-flex items-center rounded-md border border-border px-3 text-sm hover:bg-muted/30"
+            className="h-9 inline-flex items-center rounded-md border border-gray-200 px-3 text-sm hover:bg-muted/30"
             onClick={() => setShowModal(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -329,7 +329,7 @@ export default function VistoriasPage() {
           <div className="text-muted-foreground">{selected.size} selecionada(s)</div>
           <div className="flex gap-2">
             <button 
-              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              className="px-2 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" 
               disabled={selected.size === 0} 
               onClick={() => {
                 if (selected.size > 0) {
@@ -342,7 +342,7 @@ export default function VistoriasPage() {
               Exportar seleção
             </button>
             <button 
-              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              className="px-2 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" 
               disabled={selected.size === 0} 
               onClick={() => {
                 if (selected.size > 0) {
@@ -359,13 +359,13 @@ export default function VistoriasPage() {
         {/* Mobile: cards */}
         <div className="md:hidden space-y-2" role="list" aria-label="Lista de vistorias (mobile)">
           {pageItems.map((v) => (
-            <div key={v.id} role="listitem" className="rounded-lg border border-border bg-card/50 p-3">
+            <div key={v.id} role="listitem" className="rounded-lg border border-gray-200 bg-card/50 p-3">
               <div className="flex items-start justify-between gap-2">
                 <label className="flex items-center gap-2">
                   <input aria-label={`Selecionar vistoria ${v.id}`} type="checkbox" checked={selected.has(v.id)} onChange={() => toggleOne(v.id)} className="h-4 w-4" />
                   <span className="font-medium">#{v.id}</span>
                 </label>
-                <a href={`/vistorias/${v.id}`} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30 text-sm">Abrir</a>
+                <a href={`/vistorias/${v.id}`} className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30 text-sm">Abrir</a>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
                 <div className="col-span-2">
@@ -394,12 +394,12 @@ export default function VistoriasPage() {
             </div>
           ))}
           {pageItems.length === 0 && (
-            <div className="rounded-lg border border-border p-6 text-center text-muted-foreground">Nenhum resultado para os filtros atuais.</div>
+            <div className="rounded-lg border border-gray-200 p-6 text-center text-muted-foreground">Nenhum resultado para os filtros atuais.</div>
           )}
         </div>
 
         {/* Desktop: tabela */}
-        <div className="hidden md:block overflow-auto rounded-lg border border-border">
+        <div className="hidden md:block overflow-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b bg-card/95 text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-card/70">
               <tr>
@@ -428,7 +428,7 @@ export default function VistoriasPage() {
             </thead>
             <tbody>
               {pageItems.map((v) => (
-                <tr key={v.id} className="border-t border-border odd:bg-background even:bg-muted/5 hover:bg-muted/20">
+                <tr key={v.id} className="border-t border-gray-200 odd:bg-background even:bg-muted/5 hover:bg-muted/20">
                   <td className="px-3 py-2 align-middle">
                     <input aria-label={`Selecionar vistoria ${v.id}`} type="checkbox" checked={selected.has(v.id)} onChange={() => toggleOne(v.id)} className="h-4 w-4" />
                   </td>
@@ -453,7 +453,7 @@ export default function VistoriasPage() {
                             setVistoriaParaEditar(v);
                             setShowEditarVistoriaModal(true);
                           }}
-                          className="p-1.5 rounded-md border border-border hover:bg-muted/30"
+                          className="p-1.5 rounded-md border border-gray-200 hover:bg-muted/30"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -461,14 +461,14 @@ export default function VistoriasPage() {
                       <Tooltip content="Excluir vistoria">
                           <button
                             onClick={() => handleExcluirVistoria(v)}
-                            className="p-1.5 rounded-md border border-border hover:bg-muted/30 text-red-600"
+                            className="p-1.5 rounded-md border border-gray-200 hover:bg-muted/30 text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </Tooltip>
                       <a
                         href={`/vistorias/${v.id}`}
-                        className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30"
+                        className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30"
                       >
                         Abrir
                       </a>
@@ -494,14 +494,14 @@ export default function VistoriasPage() {
           </div>
           <div className="flex gap-2 self-end sm:self-auto">
             <button
-              className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
+              className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50"
               disabled={currentPage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               Anterior
             </button>
             <button
-              className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50"
+              className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50"
               disabled={currentPage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
@@ -553,13 +553,13 @@ export default function VistoriasPage() {
       {/* Modal de confirmação de exclusão */}
       {vistoriaParaExcluir && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={cancelRemove}>
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-card p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-medium mb-2">Confirmar exclusão</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Tem certeza que deseja excluir a vistoria do imóvel &quot;{vistoriaParaExcluir.imovel}&quot;?
             </p>
             <div className="flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={cancelRemove}>
+              <button className="px-3 py-2 rounded-md border border-gray-200" onClick={cancelRemove}>
                 Cancelar
               </button>
               <button 

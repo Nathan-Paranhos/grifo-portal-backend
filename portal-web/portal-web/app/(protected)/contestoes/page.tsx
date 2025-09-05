@@ -218,7 +218,7 @@ export default function ContestacoesPage() {
           <div className="text-muted-foreground">{selected.size} selecionada(s)</div>
           <div className="flex gap-2">
             <button 
-              className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50" 
+              className="px-2 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" 
               disabled={selected.size === 0} 
               onClick={() => {
                 if (selected.size > 0) {
@@ -236,13 +236,13 @@ export default function ContestacoesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
+              <tr className="border-b border-gray-200">
                 <th className="text-left py-2 pr-2 w-8">
                   <input
                     type="checkbox"
                     checked={allChecked}
                     onChange={toggleAllOnPage}
-                    className="rounded border-border"
+                    className="rounded border-gray-200"
                     aria-label="Selecionar todas as contestações da página"
                   />
                 </th>
@@ -273,13 +273,13 @@ export default function ContestacoesPage() {
                 </tr>
               ) : (
                 pageItems.map((c) => (
-                  <tr key={c.id} className="border-b border-border hover:bg-muted/20">
+                  <tr key={c.id} className="border-b border-gray-200 hover:bg-muted/20">
                     <td className="py-2 pr-2">
                       <input
                         type="checkbox"
                         checked={selected.has(c.id)}
                         onChange={() => toggleOne(c.id)}
-                        className="rounded border-border"
+                        className="rounded border-gray-200"
                         aria-label={`Selecionar contestação ${c.id}`}
                       />
                     </td>
@@ -314,7 +314,7 @@ export default function ContestacoesPage() {
                     <td className="py-2 pl-2">
                       <a
                         href={`/contestoes/${c.id}`}
-                        className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30"
+                        className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30"
                       >
                         Ver detalhes
                       </a>
@@ -334,14 +334,14 @@ export default function ContestacoesPage() {
             </div>
             <div className="flex gap-1">
               <button
-                className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50"
+                className="px-2 py-1.5 rounded-md border border-gray-200 disabled:opacity-50"
                 disabled={currentPage <= 1}
                 onClick={() => setPage(Math.max(1, currentPage - 1))}
               >
                 Anterior
               </button>
               <button
-                className="px-2 py-1.5 rounded-md border border-border disabled:opacity-50"
+                className="px-2 py-1.5 rounded-md border border-gray-200 disabled:opacity-50"
                 disabled={currentPage >= totalPages}
                 onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
               >

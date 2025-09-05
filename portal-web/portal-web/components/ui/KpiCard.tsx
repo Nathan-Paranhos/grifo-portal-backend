@@ -11,11 +11,11 @@ type Props = {
 
 export default function KpiCard({ label, value, delta, icon, color, children }: Props) {
   return (
-    <div className="rounded-xl border border-border p-4 bg-gradient-to-b from-card/80 to-card/40">
+    <div className="rounded-xl border border-gray-200 p-4 bg-gradient-to-b from-card/80 to-card/40">
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">{label}</div>
         {icon && (
-          <div className="h-8 w-8 grid place-items-center rounded-md border border-border text-muted-foreground/90" aria-hidden>
+          <div className="h-8 w-8 grid place-items-center rounded-md border border-gray-200 text-muted-foreground/90" aria-hidden>
             {icon}
           </div>
         )}

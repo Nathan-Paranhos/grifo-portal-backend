@@ -77,9 +77,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[260px_1fr]">
-      <aside className="hidden md:flex md:flex-col border-r border-border bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 sticky top-0 min-h-screen">
+      <aside className="hidden md:flex md:flex-col border-r border-gray-200 bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/40 sticky top-0 min-h-screen">
         {/* Brand */}
-        <div className="px-4 py-4 flex items-center gap-2 border-b border-border">
+        <div className="px-4 py-4 flex items-center gap-2 border-b border-gray-200">
           <div className="h-8 w-8 rounded-md bg-primary/10 border border-primary/30 grid place-items-center">
             <img src="/grifo-logo.svg" alt="Grifo Logo" className="h-6 w-6" />
           </div>
@@ -142,7 +142,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* Footer */}
-        <div className="mt-auto border-t border-border px-4 py-3 text-xs text-muted-foreground">
+        <div className="mt-auto border-t border-gray-200 px-4 py-3 text-xs text-muted-foreground">
           <div className="flex items-center justify-between">
             <span>Sessão desativada</span>
             <span className="text-muted-foreground/70">v0.1</span>
@@ -153,7 +153,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
       <main className="bg-background">
-        <header className="sticky top-0 z-40 border-b border-border bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+        <header className="sticky top-0 z-40 border-b border-gray-200 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50">
           <div className="flex items-center gap-2 p-3 md:p-4 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:pt-4">
             {/* Left cluster: brand + divider */}
             <a href="/dashboard" className="flex items-center gap-2" aria-label="Ir para dashboard">
@@ -177,7 +177,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
               />
               <svg aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4a6 6 0 104.472 10.028l4.75 4.75 1.414-1.414-4.75-4.75A6 6 0 0010 4zm-4 6a4 4 0 118 0 4 4 0 01-8 0z"/></svg>
               <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 text-[10px] text-muted-foreground">
-                <kbd className="rounded border border-border bg-muted/40 px-1.5 py-0.5">/</kbd>
+                <kbd className="rounded border border-gray-200 bg-muted/40 px-1.5 py-0.5">/</kbd>
                 <span>para buscar</span>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             {/* Right: quick actions */}
             <div className="ml-auto flex items-center gap-2 order-2 md:order-none">
               {/* Mobile nav trigger */}
-              <div className="flex items-center gap-1 rounded-lg border border-border p-0.5 bg-background/60">
+              <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5 bg-background/60">
                 <MobileNav />
                 <button className="hidden sm:inline-flex h-9 px-2 rounded-md hover:bg-muted/30" aria-label="Criar novo">
                   <div className="flex items-center gap-1.5 text-sm">
