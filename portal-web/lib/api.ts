@@ -626,7 +626,6 @@ class GrifoPortalApiService {
 const grifoPortalApiService = new GrifoPortalApiService();
 
 export default grifoPortalApiService;
-export { grifoPortalApiService };
 export type {
   ApiResponse,
   User,

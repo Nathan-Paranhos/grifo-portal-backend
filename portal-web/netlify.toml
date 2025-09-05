@@ -1,0 +1,73 @@
+[build]
+  # Diretório base onde está o projeto Next.js
+  base = "portal-web/portal-web"
+  
+  # Comando de build
+  command = "npm run build"
+  
+  # Diretório de publicação (Next.js SSR)
+  publish = ".next"
+
+# Plugin do Next.js removido para export estático
+
+[build.environment]
+  # Versão do Node.js
+  NODE_VERSION = "20.19.2"
+  
+  # Limpar cache do npm
+  NPM_FLAGS = "--prefer-offline --no-audit --progress=false"
+  
+  # Configurações de build
+  CI = "true"
+  
+  # Variáveis de ambiente para produção
+  NEXT_PUBLIC_SUPABASE_URL = "https://fsvwifbvehdhlufauahj.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzdndpZmJ2ZWhkaGx1ZmF1YWhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MjI1MDYsImV4cCI6MjA3MDE5ODUwNn0.IC-I9QsH2t5o60v70TmzVFmfe8rUuFdMD5kMErQ4CPI"
+  NEXT_PUBLIC_GRIFO_API_URL = "https://grifo-api.onrender.com"
+  NEXT_PUBLIC_API_URL = "https://grifo-api.onrender.com"
+  NEXT_PUBLIC_APP_NAME = "Grifo Portal"
+  NEXT_PUBLIC_APP_VERSION = "1.0.0"
+  NEXT_PUBLIC_APP_URL = "https://grifo-portal.netlify.app"
+  NEXTAUTH_URL = "https://grifo-portal.netlify.app"
+  NEXTAUTH_SECRET = "your-nextauth-secret-key-here"
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Configurações de redirecionamento para Next.js SSR
+# Removido redirecionamento SPA para permitir SSR
+
+# Headers de segurança
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://fsvwifbvehdhlufauahj.supabase.co;"
+
+# Configurações específicas para Next.js
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+# Configurações de cache
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

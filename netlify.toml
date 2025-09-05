@@ -1,14 +1,16 @@
 [build]
   # Diretório base onde está o projeto Next.js
-  base = "portal-web/portal-web"
+  base = "portal-web/portal-web/portal-web"
   
-  # Comando de build com instalação de dependências e limpeza de cache
+  # Comando de build com limpeza completa e reinstalação forçada
   command = "npm cache clean --force && rm -rf node_modules package-lock.json .next && npm install --no-optional && npm run build"
   
   # Diretório de publicação (Next.js SSR)
   publish = ".next"
 
-# Plugin do Next.js removido para export estático
+# Plugin do Next.js para SSR
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build.environment]
   # Versão do Node.js
