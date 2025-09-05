@@ -29,7 +29,7 @@ export default function MobileNav() {
     <>
       {/* Hamburger (mobile only) */}
       <button
-        className="md:hidden h-9 w-9 rounded-md border border-border hover:bg-muted/30 grid place-items-center"
+        className="md:hidden h-9 w-9 rounded-md border border-gray-200 hover:bg-muted/30 grid place-items-center"
         aria-label="Abrir menu de navegação"
         aria-haspopup="dialog"
         aria-controls={dlgId}
@@ -47,9 +47,9 @@ export default function MobileNav() {
             id={dlgId}
             role="dialog"
             aria-modal="true"
-            className="absolute left-0 top-0 h-full w-[86%] max-w-[360px] bg-background border-r border-border shadow-2xl p-4 flex flex-col gap-2 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+            className="absolute left-0 top-0 h-full w-[86%] max-w-[360px] bg-background border-r border-gray-200 shadow-2xl p-4 flex flex-col gap-2 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
           >
-            <div className="flex items-center justify-between pb-2 border-b border-border">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-md bg-primary/10 border border-primary/30 grid place-items-center text-primary">
                   <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 4.5L20 8l-4 3 1 5-5-2.5L7 16l1-5-4-3 5.5-1.5L12 2z"/></svg>
@@ -60,7 +60,7 @@ export default function MobileNav() {
                 </div>
               </div>
               <button
-                className="h-8 w-8 rounded-md border border-border hover:bg-muted/30 grid place-items-center"
+                className="h-8 w-8 rounded-md border border-gray-200 hover:bg-muted/30 grid place-items-center"
                 aria-label="Fechar menu"
                 onClick={() => setOpen(false)}
               >

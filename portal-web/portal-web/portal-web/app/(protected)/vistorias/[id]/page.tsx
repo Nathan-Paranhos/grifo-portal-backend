@@ -179,7 +179,7 @@ export default function VistoriaDetailPage({ params }: Props) {
         </div>
         <div className="flex gap-2">
           <button 
-            className="px-3 py-2 rounded-md border border-border hover:bg-muted/30"
+            className="px-3 py-2 rounded-md border border-gray-200 hover:bg-muted/30"
             onClick={() => {
               // TODO: Implementar download de PDF real
               alert('Funcionalidade de download de PDF será implementada em breve');
@@ -200,8 +200,8 @@ export default function VistoriaDetailPage({ params }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="md:col-span-3 rounded-lg border border-border p-4">
-          <div className="flex gap-2 border-b border-border mb-4">
+        <div className="md:col-span-3 rounded-lg border border-gray-200 p-4">
+          <div className="flex gap-2 border-b border-gray-200 mb-4">
             {(["resumo", "itens", "fotos", "pdf"] as const).map((t) => (
               <button
                 key={t}
@@ -228,7 +228,7 @@ export default function VistoriaDetailPage({ params }: Props) {
               </div>
               <div className="space-y-2">
                 <h3 className="font-medium">Linha do tempo</h3>
-                <ol className="relative border-l border-border ml-3">
+                <ol className="relative border-l border-gray-200 ml-3">
                   {data.timeline.map((ev, i) => (
                     <li key={i} className="ml-4 py-2">
                       <div className="absolute w-2 h-2 rounded-full bg-primary -left-1 mt-2" />
@@ -255,10 +255,10 @@ export default function VistoriaDetailPage({ params }: Props) {
                 </thead>
                 <tbody>
                   {data.itens.map((it) => (
-                    <tr key={it.id} className="border-t border-border">
+                    <tr key={it.id} className="border-t border-gray-200">
                       <td className="px-3 py-2">{it.titulo}</td>
                       <td className="px-3 py-2">
-                        <span className="px-2 py-0.5 text-xs rounded border border-border">
+                        <span className="px-2 py-0.5 text-xs rounded border border-gray-200">
                           {it.status}
                         </span>
                       </td>
@@ -311,7 +311,7 @@ export default function VistoriaDetailPage({ params }: Props) {
               {/* Grid de Fotos */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {data.fotos.map((f) => (
-                  <figure key={f.id} className="rounded-lg overflow-hidden border border-border relative group">
+                  <figure key={f.id} className="rounded-lg overflow-hidden border border-gray-200 relative group">
                     <img src={f.url} alt={f.legenda} className="w-full h-40 object-cover" />
                     <button
                       onClick={() => handleDeletePhoto(f.id)}
@@ -326,7 +326,7 @@ export default function VistoriaDetailPage({ params }: Props) {
               </div>
               
               {data.fotos.length === 0 && (
-                <div className="text-center py-8 border border-dashed border-border rounded-lg">
+                <div className="text-center py-8 border border-dashed border-gray-200 rounded-lg">
                   <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-2">Nenhuma foto adicionada ainda</p>
                   <p className="text-sm text-muted-foreground">Clique em "Adicionar Fotos" para enviar imagens da vistoria</p>
@@ -336,7 +336,7 @@ export default function VistoriaDetailPage({ params }: Props) {
           )}
 
           {tab === "pdf" && (
-            <div className="h-[60vh] grid place-items-center border border-dashed border-border rounded-md">
+            <div className="h-[60vh] grid place-items-center border border-dashed border-gray-200 rounded-md">
               <div className="text-center">
                 <div className="text-lg font-medium mb-1">Visualizador de PDF</div>
                 <p className="text-sm text-muted-foreground">
@@ -347,7 +347,7 @@ export default function VistoriaDetailPage({ params }: Props) {
           )}
         </div>
 
-        <aside className="rounded-lg border border-border p-4 space-y-3">
+        <aside className="rounded-lg border border-gray-200 p-4 space-y-3">
           <div>
             <div className="text-xs text-muted-foreground">Status</div>
             <div className="mt-1"><StatusBadge s={data.base.status} /></div>

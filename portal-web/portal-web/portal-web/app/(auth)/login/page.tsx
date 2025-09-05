@@ -39,7 +39,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
-      <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-[0_0_12px_#0006]">
+      <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-card p-6 shadow-[0_0_12px_#0006]">
         <h1 className="text-2xl font-semibold mb-2">Entrar</h1>
         <p className="text-sm text-muted-foreground mb-6">Faça login para acessar o portal Grifo.</p>
         

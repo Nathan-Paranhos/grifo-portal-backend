@@ -464,7 +464,7 @@ export default function PerfilPage() {
             {sessions.map((session) => {
               const IconComponent = getDeviceIcon(session.device || 'desktop');
               return (
-                <div key={session.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                       <IconComponent className="h-5 w-5 text-muted-foreground" />

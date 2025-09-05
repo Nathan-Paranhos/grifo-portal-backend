@@ -43,3 +43,5 @@ export function Tooltip({ content, children, position = 'top' }: TooltipProps) {
     </div>
   );
 }
+
+export default Tooltip;

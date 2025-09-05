@@ -231,7 +231,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => setRange(opt.id)}
                 className={`h-9 px-3 rounded-md border text-sm shrink-0 ${
-                  range === opt.id ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted/30"
+                  range === opt.id ? "bg-primary text-primary-foreground border-primary" : "border-gray-200 hover:bg-muted/30"
                 }`}
                 aria-pressed={range === opt.id}
               >
@@ -240,7 +240,7 @@ export default function DashboardPage() {
             </Tooltip>
           ))}
           <Tooltip content="Exportar dados">
-            <button className="h-9 px-3 rounded-md border border-border hover:bg-muted/30 shrink-0" aria-label="Exportar dados">
+            <button className="h-9 px-3 rounded-md border border-gray-200 hover:bg-muted/30 shrink-0" aria-label="Exportar dados">
               Exportar
             </button>
           </Tooltip>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
           <div className="mt-3 h-56 relative">
             <div className="absolute inset-0 flex flex-col justify-between opacity-30">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="border-t border-border/60" />
+                <div key={i} className="border-t border-gray-200/60" />
               ))}
             </div>
             <div className="absolute inset-0 flex items-end gap-2 px-0.5">

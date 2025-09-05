@@ -188,7 +188,7 @@ export default function EmpresasPage() {
           <p className="text-sm text-muted-foreground">Gestão de empresas parceiras</p>
         </div>
         <Tooltip content="Criar nova empresa">
-          <button onClick={openCreate} className="h-9 rounded-md border border-border px-3 text-sm hover:bg-muted/30">
+          <button onClick={openCreate} className="h-9 rounded-md border border-gray-200 px-3 text-sm hover:bg-muted/30">
             Nova empresa
           </button>
         </Tooltip>
@@ -239,14 +239,14 @@ export default function EmpresasPage() {
             </div>
           ) : (
             pageItems.map((e) => (
-              <div key={e.id} className="rounded-lg border border-border bg-card p-3">
+              <div key={e.id} className="rounded-lg border border-gray-200 bg-card p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium leading-5">{e.nome}</div>
                     <div className="text-[11px] font-mono text-muted-foreground mt-0.5">{e.cnpj}</div>
                   </div>
                   <div className="flex shrink-0 gap-2">
-                    <button aria-label={`Editar empresa ${e.nome}`} onClick={() => openEdit(e)} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30">Editar</button>
+                    <button aria-label={`Editar empresa ${e.nome}`} onClick={() => openEdit(e)} className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30">Editar</button>
                     <button aria-label={`Excluir empresa ${e.nome}`} onClick={() => askRemove(e)} className="px-2 py-1.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10">Excluir</button>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export default function EmpresasPage() {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden md:block overflow-auto rounded-lg border border-border">
+        <div className="hidden md:block overflow-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b bg-card/95 text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-card/70">
               <tr>
@@ -285,7 +285,7 @@ export default function EmpresasPage() {
             </thead>
             <tbody>
               {pageItems.map((e) => (
-                <tr key={e.id} className="border-t border-border odd:bg-background even:bg-muted/5 hover:bg-muted/20">
+                <tr key={e.id} className="border-t border-gray-200 odd:bg-background even:bg-muted/5 hover:bg-muted/20">
                   <td className="px-3 py-2">{e.nome}</td>
                   <td className="px-3 py-2">{e.cnpj}</td>
                   <td className="px-3 py-2">{e.contato}</td>
@@ -304,7 +304,7 @@ export default function EmpresasPage() {
                   </td>
                   <td className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2">
-                      <button aria-label={`Editar empresa ${e.nome}`} onClick={() => openEdit(e)} className="px-2 py-1.5 rounded-md border border-border hover:bg-muted/30">Editar</button>
+                      <button aria-label={`Editar empresa ${e.nome}`} onClick={() => openEdit(e)} className="px-2 py-1.5 rounded-md border border-gray-200 hover:bg-muted/30">Editar</button>
                       <button aria-label={`Excluir empresa ${e.nome}`} onClick={() => askRemove(e)} className="px-2 py-1.5 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10">Excluir</button>
                     </div>
                   </td>
@@ -322,15 +322,15 @@ export default function EmpresasPage() {
         <div className="mt-3 flex items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground">Página {currentPage} de {totalPages}</div>
           <div className="flex gap-2">
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
-            <button className="px-3 py-1.5 rounded-md border border-border disabled:opacity-50" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
+            <button className="px-3 py-1.5 rounded-md border border-gray-200 disabled:opacity-50" disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Próxima</button>
           </div>
         </div>
       </SectionCard>
 
       {isOpen && editing && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={closeModal} role="dialog" aria-modal="true" aria-labelledby="dialog-empresas-title">
-          <div className="w-full max-w-lg rounded-xl border border-border bg-card p-4 shadow-[0_0_12px_#0006]" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-card p-4 shadow-[0_0_12px_#0006]" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 id="dialog-empresas-title" className="text-lg font-medium">{editing.id ? "Editar empresa" : "Nova empresa"}</h3>
               <button className="text-sm text-muted-foreground hover:opacity-80" onClick={closeModal}>Fechar</button>
@@ -374,7 +374,7 @@ export default function EmpresasPage() {
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={closeModal}>Cancelar</button>
+              <button className="px-3 py-2 rounded-md border border-gray-200" onClick={closeModal}>Cancelar</button>
               <button className="px-3 py-2 rounded-md bg-primary text-primary-foreground" onClick={saveItem}>Salvar</button>
             </div>
           </div>
@@ -383,11 +383,11 @@ export default function EmpresasPage() {
 
       {toDelete && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={cancelRemove} role="dialog" aria-modal="true" aria-labelledby="dialog-empresas-remove-title">
-          <div className="w-full max-w-md rounded-xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-card p-4" onClick={(e) => e.stopPropagation()}>
             <h3 id="dialog-empresas-remove-title" className="text-lg font-medium mb-2">Confirmar exclusão</h3>
             <p className="text-sm text-muted-foreground mb-4">Tem certeza que deseja excluir &quot;{toDelete.nome}&quot;?</p>
             <div className="flex justify-end gap-2">
-              <button className="px-3 py-2 rounded-md border border-border" onClick={cancelRemove}>Cancelar</button>
+              <button className="px-3 py-2 rounded-md border border-gray-200" onClick={cancelRemove}>Cancelar</button>
               <button className="px-3 py-2 rounded-md border border-rose-500/40 text-rose-400 hover:bg-rose-500/10" onClick={confirmRemove}>Excluir</button>
             </div>
           </div>
